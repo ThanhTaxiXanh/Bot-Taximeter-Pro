@@ -71,14 +71,17 @@ class _SearchLivePanelState extends State<SearchLivePanel> {
         if (_searched && _results.isEmpty)
           const Text('Không tìm thấy địa chỉ phù hợp.'),
         for (final place in _results)
-          RadioListTile<LocatedPlace>(
-            value: place,
-            groupValue: _selected,
-            onChanged: (value) => setState(() => _selected = value),
-            title: Text(place.name, maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 12)),
-            dense: true,
+          Material(
+            color: Colors.transparent,
+            child: RadioListTile<LocatedPlace>(
+              value: place,
+              groupValue: _selected,
+              onChanged: (value) => setState(() => _selected = value),
+              title: Text(place.name, maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12)),
+              dense: true,
+            ),
           ),
         if (_selected != null) Row(children: <Widget>[
           Expanded(child: TextButton(
