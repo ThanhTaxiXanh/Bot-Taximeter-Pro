@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/app_shell.dart';
 import '../../../shared/glass_widgets.dart';
 import '../../../shared/shared_map_view.dart';
+import '../data/gps_tracker.dart';
 
 /// Lập tuyến bằng số liệu giả, chưa gọi OSRM hay tính cước thực.
 class RoutePage extends StatefulWidget {
@@ -140,6 +142,10 @@ class _RoutePageState extends State<RoutePage> {
       Positioned.fill(child: SharedMapView(
         is3D: _is3D, isDark: false, trafficEnabled: _traffic,
         followVehicle: false, showRoute: true, routeIndex: _selectedRoute,
+        vehiclePosition: GpsTracker.instance.fix == null ? null
+            : LatLng(GpsTracker.instance.fix!.point.latitude,
+                GpsTracker.instance.fix!.point.longitude),
+        bearing: GpsTracker.instance.fix?.point.headingDegrees ?? 0,
       )),
       Positioned(
         right: 5, top: 5,
@@ -252,7 +258,9 @@ class _RoutePageState extends State<RoutePage> {
   ]);
 
   @override
-  Widget build(BuildContext context) => AppShell(
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: GpsTracker.instance,
+    builder: (context, _) => AppShell(
     title: 'Lập tuyến đường',
     showBack: true,
     onBack: () => context.canPop()
@@ -274,6 +282,7 @@ class _RoutePageState extends State<RoutePage> {
         const SizedBox(height: 12),
         _actions(),
       ],
+    ),
     ),
   );
 }

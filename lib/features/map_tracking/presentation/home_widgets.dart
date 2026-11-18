@@ -48,15 +48,17 @@ class HomeStatusChip extends StatelessWidget {
       );
 }
 
-/// Tốc độ/giới hạn đều là số liệu mẫu tới khi GPS và SpeedLimitEngine có thật.
+/// Tốc độ có thể nhận GPS đã lọc; biển giới hạn vẫn là dữ liệu mẫu.
 class HomeSpeedPanel extends StatelessWidget {
   const HomeSpeedPanel({
     super.key,
     required this.limitKmh,
     required this.onLimitTap,
+    this.speedKmh = 42,
   });
 
   final int limitKmh;
+  final int speedKmh;
   final VoidCallback onLimitTap;
 
   @override
@@ -65,10 +67,10 @@ class HomeSpeedPanel extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            const Column(
+            Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Text('42', style: TextStyle(
+                Text('$speedKmh', style: const TextStyle(
                   color: AppColors.white,
                   fontSize: 34, height: 1,
                   fontWeight: FontWeight.w900,

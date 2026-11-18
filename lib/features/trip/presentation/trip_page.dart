@@ -1,21 +1,21 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/app_shell.dart';
 import '../../../shared/glass_widgets.dart';
 import '../../map_tracking/presentation/home_widgets.dart';
 import '../../../shared/shared_map_view.dart';
-
+import '../../map_tracking/data/gps_tracker.dart';
+import '../../map_tracking/presentation/gps_permission_prompt.dart';
+import 'trip_map_panel.dart';
 /// Màn 4 giả lập: không lấy GPS, không tính cước thật, không gửi SOS.
 class TripPage extends StatefulWidget {
   const TripPage({super.key});
   @override
   State<TripPage> createState() => _TripPageState();
 }
-
 class _TripPageState extends State<TripPage> {
   final _mapKey = GlobalKey<SharedMapViewState>();
   static const int _initialSeconds = 14 * 60 + 26;
@@ -24,10 +24,16 @@ class _TripPageState extends State<TripPage> {
   int _waiting = 2 * 60 + 10;
   int _toll = 0;
   bool _paused = false, _is3D = true, _traffic = true, _follow = true;
-
   @override
   void initState() {
     super.initState();
+    if (!GpsTracker.useMock) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final ok = await confirmGpsStart(context, trip: true);
+        if (mounted && !ok) _notice('Chưa có GPS, cước vẫn là mẫu');
+      });
+    }
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       setState(() {
@@ -35,13 +41,14 @@ class _TripPageState extends State<TripPage> {
       });
     });
   }
-
   @override
   void dispose() {
     _ticker.cancel();
+    if (GpsTracker.instance.tripActive) {
+      unawaited(GpsTracker.instance.stop());
+    }
     super.dispose();
   }
-
   // Phép cộng tiền mẫu không phải biểu phí taxi được kiểm định.
   int get _fare => 72000 + ((_trip - _initialSeconds) ~/ 20) * 1000 + _toll;
   String _money(int value) => '${value.toString().replaceAllMapped(
@@ -50,12 +57,10 @@ class _TripPageState extends State<TripPage> {
   String _clock(int seconds) =>
       '${(seconds ~/ 60).toString().padLeft(2, '0')}:'
       '${(seconds % 60).toString().padLeft(2, '0')}';
-
   void _notice(String message) =>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
-
   Future<void> _addToll() async {
     final amount = await showModalBottomSheet<int>(
       context: context, showDragHandle: true,
@@ -80,7 +85,6 @@ class _TripPageState extends State<TripPage> {
     );
     if (mounted && amount != null) setState(() => _toll += amount);
   }
-
   Future<void> _finish() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -101,13 +105,16 @@ class _TripPageState extends State<TripPage> {
     );
     if (!mounted || confirmed != true) return;
     _ticker.cancel();
+    final measured = GpsTracker.instance.fix == null ? 'Chưa đo GPS'
+        : '${(GpsTracker.instance.distanceMeters / 1000).toStringAsFixed(2)} km';
+    await GpsTracker.instance.stop();
+    if (!mounted) return;
     context.go(AppRouter.receipt, extra: <String, String>{
-      'fare': _money(_fare), 'distance': '8,4 km',
+      'fare': _money(_fare), 'distance': measured,
       'duration': _clock(_trip), 'waiting': _clock(_waiting),
       'toll': _money(_toll),
     });
   }
-
   Future<void> _sos() => showDialog<void>(
     context: context,
     builder: (dialogContext) => AlertDialog(
@@ -122,11 +129,19 @@ class _TripPageState extends State<TripPage> {
       ],
     ),
   );
-
   Widget _chips() => Row(children: <Widget>[
     Expanded(child: HomeStatusChip(
-      label: 'GPS tốt', icon: Icons.check_circle, active: true,
-      onTap: () => _notice('GPS tốt chỉ là dữ liệu mẫu'),
+      label: GpsTracker.useMock ? 'GPS tốt' : GpsTracker.instance.message,
+      icon: Icons.check_circle,
+      active: GpsTracker.useMock || GpsTracker.instance.hasGoodFix,
+      onTap: () async {
+        if (GpsTracker.instance.isTracking) {
+          _notice(GpsTracker.instance.message);
+          return;
+        }
+        final ok = await confirmGpsStart(context, trip: true);
+        if (mounted && !ok) _notice(GpsTracker.instance.message);
+      },
     )),
     const SizedBox(width: 6),
     Expanded(flex: 2, child: HomeStatusChip(
@@ -140,7 +155,6 @@ class _TripPageState extends State<TripPage> {
       onTap: () => setState(() => _follow = !_follow),
     )),
   ]);
-
   Widget _directions() => GlassCard(
     selected: true,
     padding: const EdgeInsets.all(11),
@@ -162,47 +176,14 @@ class _TripPageState extends State<TripPage> {
       )),
     ]),
   );
-
-  Widget _map() => ClipRRect(
-    borderRadius: BorderRadius.circular(18),
-    child: SizedBox(height: 218, child: Stack(children: <Widget>[
-      Positioned.fill(child: SharedMapView(
-        key: _mapKey,
-        is3D: _is3D, isDark: true,
-        trafficEnabled: _traffic, followVehicle: _follow,
-        showRoute: true, routeIndex: 0,
-        onFollowChanged: (value) => setState(() => _follow = value),
-      )),
-      Positioned(top: 6, left: 6, child: HomeSpeedPanel(
-        limitKmh: 60,
-        onLimitTap: () => _notice('Biển hạn chế chỉ là dữ liệu mẫu'),
-      )),
-      Positioned(top: 5, right: 5, child: SizedBox(
-        width: 60, height: 203,
-        child: FittedBox(
-          fit: BoxFit.scaleDown, alignment: Alignment.topCenter,
-          child: MapControlButtons(
-            is3D: _is3D, trafficEnabled: _traffic,
-            on3D: () => setState(() => _is3D = true),
-            on2D: () => setState(() => _is3D = false),
-            onTraffic: () => setState(() => _traffic = !_traffic),
-            onRecenter: () => _mapKey.currentState?.recenter(),
-          ),
-        ),
-      )),
-      const Positioned(
-        left: 26, right: 26, bottom: 7,
-        child: GlassCard(
-          padding: EdgeInsets.symmetric(vertical: 7, horizontal: 8),
-          child: Text('Đường Trần Nhân Vũ · BẢN ĐỒ MẪU',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.white,
-                  fontSize: 12, fontWeight: FontWeight.bold)),
-        ),
-      ),
-    ])),
+  Widget _map() => TripMapPanel(
+    mapKey: _mapKey, is3D: _is3D, traffic: _traffic, follow: _follow,
+    on3D: () => setState(() => _is3D = true),
+    on2D: () => setState(() => _is3D = false),
+    onTraffic: () => setState(() => _traffic = !_traffic),
+    onFollowChanged: (value) => setState(() => _follow = value),
+    onLimitTap: () => _notice('Biển tốc độ chỉ là dữ liệu mẫu'),
   );
-
   Widget _statistics() => GridView.count(
     crossAxisCount: 2, childAspectRatio: 1.3, shrinkWrap: true,
     crossAxisSpacing: 7, mainAxisSpacing: 7,
@@ -210,14 +191,16 @@ class _TripPageState extends State<TripPage> {
     children: <Widget>[
       StatCard(label: 'Tổng cước', value: _money(_fare),
           icon: Icons.account_balance_wallet, highlight: true),
-      const StatCard(label: 'Quãng đường', value: '8,4 km', icon: Icons.route),
+      StatCard(label: 'Quãng đường', icon: Icons.route,
+        value: GpsTracker.instance.fix == null
+            ? (GpsTracker.useMock ? '8,4 km' : 'Chưa đo')
+            : '${(GpsTracker.instance.distanceMeters / 1000).toStringAsFixed(2)} km'),
       StatCard(label: 'Thời gian chuyến', value: _clock(_trip),
           icon: Icons.timer_outlined),
       StatCard(label: 'Thời gian chờ', value: _clock(_waiting),
           icon: Icons.hourglass_empty),
     ],
   );
-
   Widget _warning() => const GlassCard(
     danger: true, padding: EdgeInsets.all(11),
     child: Row(children: <Widget>[
@@ -229,7 +212,6 @@ class _TripPageState extends State<TripPage> {
       Icon(Icons.chevron_right, color: AppColors.white),
     ]),
   );
-
   Widget _controls() => Padding(
     padding: const EdgeInsets.fromLTRB(0, 5, 0, 7),
     child: Row(children: <Widget>[
@@ -237,7 +219,10 @@ class _TripPageState extends State<TripPage> {
         label: _paused ? 'Tiếp tục' : 'Tạm dừng',
         icon: _paused ? Icons.play_arrow : Icons.pause,
         primary: false,
-        onPressed: () => setState(() => _paused = !_paused),
+        onPressed: () {
+          setState(() => _paused = !_paused);
+          GpsTracker.instance.setTripPaused(_paused);
+        },
       )),
       const SizedBox(width: 7),
       Expanded(flex: 6, child: NeonButton(
@@ -256,9 +241,10 @@ class _TripPageState extends State<TripPage> {
       )),
     ]),
   );
-
   @override
-  Widget build(BuildContext context) => AppShell(
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: GpsTracker.instance,
+    builder: (context, _) => AppShell(
     scrollable: false,
     helpText: 'Theo dõi chuyến đi, tính cước trực tiếp, '
         'xem tốc độ, theo dõi đường và cảnh báo giao thông.',
@@ -285,6 +271,12 @@ class _TripPageState extends State<TripPage> {
                 icon: const Icon(Icons.toll),
                 label: Text('Phụ phí BOT: ${_money(_toll)}'),
               ),
+              if (!GpsTracker.useMock)
+                TextButton.icon(
+                  onPressed: () => showBatteryHelp(context),
+                  icon: const Icon(Icons.battery_saver),
+                  label: const Text('Cài đặt pin Xiaomi / Redmi'),
+                ),
               _warning(),
               const SizedBox(height: 10),
             ],
@@ -292,6 +284,7 @@ class _TripPageState extends State<TripPage> {
         )),
         _controls(),
       ]),
+    ),
     ),
   );
 }

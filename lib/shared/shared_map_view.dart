@@ -12,14 +12,14 @@ import '../features/map_tracking/presentation/mock_travel_data.dart';
 import '../features/map_tracking/presentation/home_map_mock.dart';
 
 /// Một widget Google Maps dùng chung trên Home, Tuyến đường, Đang chạy.
-/// Vị trí chưa được nối GPS: toàn bộ tọa độ hiện là tọa độ mẫu Bắc Giang.
+/// Marker chỉ được hiển thị khi truyền vào vị trí GPS đã lọc.
 class SharedMapView extends StatefulWidget {
   const SharedMapView({
     super.key, required this.is3D, required this.isDark,
     required this.trafficEnabled, required this.followVehicle,
     this.showRoute = false, this.routeIndex = 0,
     this.onFollowChanged,
-    this.vehiclePosition = demoVehiclePosition,
+    this.vehiclePosition,
     this.bearing = 0,
     this.zoom = 17,
   });
@@ -32,7 +32,7 @@ class SharedMapView extends StatefulWidget {
   final bool showRoute;
   final int routeIndex;
   final ValueChanged<bool>? onFollowChanged;
-  final LatLng vehiclePosition;
+  final LatLng? vehiclePosition;
   final double bearing;
   final double zoom;
 
@@ -132,7 +132,7 @@ class SharedMapViewState extends State<SharedMapView> {
   }
 
   CameraPosition get _camera => CameraPosition(
-    target: widget.vehiclePosition,
+    target: widget.vehiclePosition ?? SharedMapView.demoVehiclePosition,
     zoom: widget.zoom,
     bearing: widget.bearing,
     tilt: widget.is3D ? _savedTilt : 0,
@@ -209,17 +209,18 @@ class SharedMapViewState extends State<SharedMapView> {
         zoomControlsEnabled: false,
         compassEnabled: true,
         markers: <Marker>{
-          Marker(
-            markerId: const MarkerId('demo-vehicle'),
-            position: widget.vehiclePosition,
-            icon: _arrowIcon ??
-                BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueAzure),
-            flat: true,
-            anchor: const Offset(.5, .5),
-            rotation: widget.bearing,
-            infoWindow: const InfoWindow(title: 'Vị trí xe mẫu, chưa có GPS'),
-          ),
+          if (widget.vehiclePosition != null)
+            Marker(
+              markerId: const MarkerId('gps-vehicle'),
+              position: widget.vehiclePosition!,
+              icon: _arrowIcon ??
+                  BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueAzure),
+              flat: true,
+              anchor: const Offset(.5, .5),
+              rotation: widget.bearing,
+              infoWindow: const InfoWindow(title: 'Vị trí GPS thiết bị'),
+            ),
         },
         polylines: _polylines,
         onMapCreated: (controller) {
@@ -234,7 +235,9 @@ class SharedMapViewState extends State<SharedMapView> {
       )),
       const Positioned(left: 5, bottom: 4, child: IgnorePointer(
         child: Text(
-          'VỊ TRÍ MẪU · GPS CHƯA KẾT NỐI',
+          widget.vehiclePosition == null
+              ? 'GPS CHƯA XÁC ĐỊNH · KHÔNG CÓ MARKER'
+              : 'VỊ TRÍ GPS · TUYẾN ĐƯỜNG VẪN LÀ MẪU',
           style: TextStyle(
             color: Colors.white, fontSize: 9,
             shadows: <Shadow>[

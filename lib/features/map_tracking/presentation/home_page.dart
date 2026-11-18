@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/app_shell.dart';
 import '../../../shared/glass_widgets.dart';
 import '../../../shared/shared_map_view.dart';
+import '../data/gps_tracker.dart';
+import 'gps_permission_prompt.dart';
 import 'home_widgets.dart';
-
 /// Màn Home mock, không dùng GPS, Google Maps hay gọi mạng.
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
   @override
   State<HomePage> createState() => _HomePageState();
 }
-
 class _HomePageState extends State<HomePage> {
   final _mapKey = GlobalKey<SharedMapViewState>();
   bool _is3D = true;
@@ -22,13 +22,11 @@ class _HomePageState extends State<HomePage> {
   bool _traffic = false;
   bool _follow = true;
   int _limitKmh = 60;
-
   void _message(String value) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(value), duration: const Duration(seconds: 2)),
     );
   }
-
   Future<void> _chooseSpeedLimit() async {
     await showModalBottomSheet<void>(
       context: context,
@@ -67,7 +65,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
   void _showMenu() {
     showModalBottomSheet<void>(
       context: context,
@@ -85,7 +82,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
   Widget _menuItem(
     BuildContext sheetContext, String label, IconData icon, String route,
   ) => ListTile(
@@ -96,13 +92,22 @@ class _HomePageState extends State<HomePage> {
           context.push(route);
         },
       );
-
   Widget _statusChips() => Row(
         children: <Widget>[
           Expanded(
             child: HomeStatusChip(
-              label: 'GPS tốt', icon: Icons.check_circle, active: true,
-              onTap: () => _message('GPS tốt: dữ liệu minh họa'),
+              label: GpsTracker.useMock ? 'GPS tốt'
+                  : GpsTracker.instance.message,
+              icon: Icons.check_circle,
+              active: GpsTracker.useMock || GpsTracker.instance.hasGoodFix,
+              onTap: () async {
+                if (GpsTracker.instance.isTracking) {
+                  _message(GpsTracker.instance.message);
+                  return;
+                }
+                final ok = await confirmGpsStart(context);
+                if (mounted && !ok) _message(GpsTracker.instance.message);
+              },
             ),
           ),
           const SizedBox(width: 6),
@@ -111,7 +116,8 @@ class _HomePageState extends State<HomePage> {
             child: HomeStatusChip(
               label: _is3D ? 'Google Maps 3D' : 'Google Maps 2D',
               icon: Icons.view_in_ar,
-              onTap: () => _message('Bản đồ đang được mô phỏng'),
+              onTap: () => _message(GpsTracker.useMock
+                  ? 'Bản đồ mẫu CI' : 'Đang dùng Google Maps SDK'),
             ),
           ),
           const SizedBox(width: 6),
@@ -123,7 +129,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       );
-
   Widget _map(double height) => SizedBox(
         height: height,
         child: ClipRRect(
@@ -135,6 +140,10 @@ class _HomePageState extends State<HomePage> {
                   key: _mapKey,
                   is3D: _is3D, isDark: _isDark,
                   trafficEnabled: _traffic, followVehicle: _follow,
+                  vehiclePosition: GpsTracker.instance.fix == null ? null
+                      : LatLng(GpsTracker.instance.fix!.point.latitude,
+                          GpsTracker.instance.fix!.point.longitude),
+                  bearing: GpsTracker.instance.fix?.point.headingDegrees ?? 0,
                   onFollowChanged: (value) =>
                       setState(() => _follow = value),
                 ),
@@ -143,6 +152,8 @@ class _HomePageState extends State<HomePage> {
                 top: 8, left: 8,
                 child: HomeSpeedPanel(
                   limitKmh: _limitKmh, onLimitTap: _chooseSpeedLimit,
+                  speedKmh: GpsTracker.instance.fix?.speedKmh.round() ??
+                      (GpsTracker.useMock ? 42 : 0),
                 ),
               ),
               Positioned(
@@ -163,7 +174,8 @@ class _HomePageState extends State<HomePage> {
                       onRecenter: () {
                         setState(() => _follow = true);
                         _mapKey.currentState?.recenter();
-                        _message('Đã về vị trí xe mẫu, GPS chưa bật');
+                        _message(GpsTracker.instance.fix == null
+                            ? 'GPS chưa có tín hiệu' : 'Đã về vị trí GPS thiết bị');
                       },
                     ),
                   ),
@@ -172,19 +184,33 @@ class _HomePageState extends State<HomePage> {
               Positioned(
                 bottom: 8, left: 36, right: 36,
                 child: GlassCard(
+                  onTap: () async {
+                    if (GpsTracker.instance.fix == null) {
+                      _message('Chưa có GPS; chạm chip GPS để bật');
+                      return;
+                    }
+                    await GpsTracker.instance.refreshRoadName();
+                    if (mounted && GpsTracker.instance.roadName == null) {
+                      _message('Tên đường chưa có; kiểm tra máy chủ geocoding');
+                    }
+                  },
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 8,
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Icon(Icons.location_on, color: AppColors.cyan),
-                      SizedBox(width: 5),
+                      const Icon(Icons.location_on, color: AppColors.cyan),
+                      const SizedBox(width: 5),
                       Flexible(
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
-                          child: Text('Đường Trần Nhân Vũ',
-                            style: TextStyle(
+                          child: Text(
+                            GpsTracker.instance.roadName == null
+                                ? (GpsTracker.useMock ? 'Đường Trần Nhân Vũ'
+                                    : 'Chạm để lấy tên đường')
+                                : '${GpsTracker.instance.roadName} · © OpenStreetMap contributors',
+                            style: const TextStyle(
                               fontWeight: FontWeight.w800,
                               color: AppColors.white, fontSize: 15,
                             ),
@@ -195,9 +221,10 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              const Positioned(
+              Positioned(
                 left: 10, bottom: 10,
-                child: Text('VỊ TRÍ MẪU', style: TextStyle(
+                child: Text(GpsTracker.useMock ? 'BẢN ĐỒ MẪU'
+                    : 'GPS THIẾT BỊ', style: const TextStyle(
                   color: AppColors.navyInk,
                   fontSize: 8, fontWeight: FontWeight.bold,
                 )),
@@ -206,7 +233,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       );
-
   Widget _shortcuts() => Row(
         children: <Widget>[
           _quick('Tìm kiếm', Icons.search, AppRouter.search),
@@ -218,18 +244,18 @@ class _HomePageState extends State<HomePage> {
           _quick('Cài đặt', Icons.settings, AppRouter.settings),
         ],
       );
-
   Widget _quick(String label, IconData icon, String route) => Expanded(
         child: HomeQuickAction(
           label: label, icon: icon, onTap: () => context.push(route),
         ),
       );
-
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.sizeOf(context).height;
     final mapHeight = (height * .32).clamp(205.0, 310.0).toDouble();
-    return AppShell(
+    return AnimatedBuilder(
+      animation: GpsTracker.instance,
+      builder: (context, _) => AppShell(
       onMenu: _showMenu,
       onNotification: () => _message('Chưa có thông báo mới'),
       onHelp: () => _message('Đây là màn hình mô phỏng, chưa dùng GPS thật'),
@@ -267,6 +293,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ],
+      ),
       ),
     );
   }
