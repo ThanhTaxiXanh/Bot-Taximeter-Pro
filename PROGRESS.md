@@ -85,6 +85,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 - **CI #16** commit `960bdf5`: 4/4 đạt. https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44284562646
 - **Bước 10 + 11:** **CI #23 đạt 4/4**, commit ứng dụng `fb5519b`: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44317231987. Đã kiểm tra trực tiếp job logs: analyzer không có warning/error (còn lint `info`), 42/42 unit/widget test đạt, APK debug arm64 được build, Android 13 smoke test 7/7 đạt. Issue #1 báo `✅ TẤT CẢ ĐẠT`: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1. APK: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/releases/tag/debug-latest
+- **Bước 12 (phần cơ sở): CI #24 đạt 4/4**, commit ứng dụng `f3d8c4b`: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44324457199. Job logs: analyzer không warning/error (lint info vẫn còn), **51/51 unit/widget test đạt**, APK debug arm64 build đạt, **Android 13 smoke 7/7 đạt**. APK: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/releases/tag/debug-latest. Chưa thử GPS thật, chưa đối chiếu nội dung đầy đủ Master Prompt Bước 12.
 - SHA-1 debug: `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`.
 
 ## Cần thử trên điện thoại
@@ -98,7 +99,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Ưu tiên hiện tại:** Người dùng đã yêu cầu tiếp tục Bước 12. Đã chuẩn bị phần cơ sở cảnh báo ngưỡng tốc độ cá nhân; chạy CI xác minh các thay đổi, sau đó kiểm tra Redmi và đối chiếu Master Prompt gốc trước khi xác nhận trọn Bước 12. Chưa triển khai các bước tiếp theo.
+**Ưu tiên hiện tại:** Phần cơ sở Bước 12 đã qua CI #24: analyzer, 51 unit/widget test, APK arm64, 7/7 smoke Android 13. Tiếp theo kiểm tra Redmi và đối chiếu Master Prompt gốc trước khi xác nhận trọn Bước 12. Không triển khai Bước 13 khi chưa có yêu cầu tiếp tục.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -110,7 +111,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 - Cấu hình dịch vụ Nominatim/OSRM HTTPS được phép ngay trên điện thoại qua **Cài đặt → Máy chủ tìm địa chỉ & định tuyến → Lưu máy chủ tuyến**. URL lưu trong SharedPreferences, phục hồi khi mở app, để trống = tắt dịch vụ. Không cần đổi workflow/Google Maps API key. Hướng dẫn chính thức tại `docs/ROUTING_SETUP.md`.
 - Bổ sung `test/route_services_test.dart`, `test/route_live_widgets_test.dart` và `test/routing_server_settings_test.dart` dùng phản hồi giả lập, không cần mạng. **CI #23 commit `fb5519b` đạt đủ 4/4.** Hạ tầng Nominatim/OSRM tự quản hoặc được cấp phép và thử nghiệm tuyến thật trên điện thoại vẫn chưa thực hiện; không tuyên bố dịch vụ thực địa đã hoạt động.
 
-## Bước 12 — đang triển khai phần cơ sở, chờ CI và Master Prompt
+## Bước 12 — hoàn thành phần cơ sở, CI #24 đạt 4/4; còn thiếu Master Prompt gốc
 
 - **Tình trạng yêu cầu:** File `MASTER PROMPT.md` của cuộc trao đổi trước không có trong danh sách file repository hoặc tệp dự án truy cập được ở lượt này; **chưa thể xác nhận phạm vi Bước 12 theo nguyên văn Master Prompt**.
 - **Phần thực hiện có thể kiểm chứng:** `road_safety/speed_alert_engine.dart` xử lý ngưỡng tốc độ tài xế tự chọn; yêu cầu 3 mẫu liên tiếp vượt >5 km/h, 2 mẫu trở về dưới ngưỡng+1, khử nhiễu/mất GPS, giới hạn tần suất cảnh báo 30 giây.
@@ -118,4 +119,4 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 - `speed_alert_widgets.dart` hiển thị banner tại Home/Trip và màn Cài đặt `Cảnh báo tốc độ cá nhân` cho tài xế bật/tắt, đặt ngưỡng, lưu lại. Banner luôn ghi rõ đây **không phải giới hạn tốc độ pháp lý**.
 - Không dùng `traffic_signs.csv` hay `giao_thong_viet_nam.csv` làm nguồn tốc độ giới hạn tự động do chưa xác minh tính chính thức/độ mới. Biển giới hạn minh họa trên bản đồ vẫn được ghi nhãn dữ liệu mẫu.
 - Test mới: `test/speed_alert_engine_test.dart`, `test/speed_alert_widgets_test.dart`; CI dùng GPS/SharedPreferences giả lập, không có Google Maps API key.
-- Hướng dẫn và giới hạn tại `docs/SPEED_ALERT_SETUP.md`. **Chưa coi Bước 12 hoàn tất trước khi có Master Prompt gốc, kết quả CI đầy đủ và thử nghiệm trên điện thoại thật.**
+- Hướng dẫn và giới hạn tại `docs/SPEED_ALERT_SETUP.md`. **CI #24 đã xác nhận phần cơ sở 4/4 đạt. Chưa xác nhận toàn bộ Bước 12 khi chưa đối chiếu Master Prompt gốc và chưa thử thực địa trên Redmi.**
