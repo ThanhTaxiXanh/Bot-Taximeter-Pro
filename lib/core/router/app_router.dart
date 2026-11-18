@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../app_config.dart';
+import '../../features/map_tracking/presentation/home_page.dart';
 
 /// Bảy tuyến màn hình cơ bản. Giao diện hoàn chỉnh được bổ sung từ bước 2.
 abstract final class AppRouter {
@@ -16,7 +17,7 @@ abstract final class AppRouter {
   static GoRouter createRouter() => GoRouter(
         initialLocation: home,
         routes: <RouteBase>[
-          GoRoute(path: home, builder: (_, _) => const _HomePage()),
+          GoRoute(path: home, builder: (_, _) => const HomePage()),
           GoRoute(path: search, builder: (_, _) => const _SearchPage()),
           GoRoute(path: route, builder: (_, _) => const _RoutePage()),
           GoRoute(path: trip, builder: (_, _) => const _TripPage()),
@@ -96,25 +97,6 @@ class _NavButton extends StatelessWidget {
           : OutlinedButton(onPressed: onPressed, child: Text(label)),
     );
   }
-}
-
-class _HomePage extends StatelessWidget {
-  const _HomePage();
-
-  @override
-  Widget build(BuildContext context) => const _PageShell(
-        children: <Widget>[
-          Text('GPS tốt  ·  Google Maps 3D  ·  Follow xe'),
-          SizedBox(height: 18),
-          _NavButton('Tìm kiếm', AppRouter.search),
-          _NavButton('Tuyến đường', AppRouter.route),
-          _NavButton('Doanh thu', AppRouter.history),
-          _NavButton('Cài đặt', AppRouter.settings),
-          SizedBox(height: 16),
-          _NavButton('Bắt đầu', AppRouter.trip, primary: true),
-          _NavButton('Lịch sử', AppRouter.history),
-        ],
-      );
 }
 
 class _SearchPage extends StatelessWidget {
