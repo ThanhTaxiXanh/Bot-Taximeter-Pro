@@ -46,7 +46,9 @@ class SettingsToggle extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   @override
-  Widget build(BuildContext context) => SwitchListTile(
+  Widget build(BuildContext context) => Material(
+    type: MaterialType.transparency,
+    child: SwitchListTile(
     contentPadding: EdgeInsets.zero,
     dense: true,
     secondary: Icon(icon, color: AppColors.cyan, size: 20),
@@ -59,6 +61,7 @@ class SettingsToggle extends StatelessWidget {
     value: value,
     activeThumbColor: AppColors.cyan,
     onChanged: onChanged,
+  ),
   );
 }
 

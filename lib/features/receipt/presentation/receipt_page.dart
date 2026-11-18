@@ -66,9 +66,9 @@ class _ReceiptPageState extends State<ReceiptPage> {
         const Row(children: <Widget>[
           Icon(Icons.receipt_long, color: AppColors.cyan, size: 25),
           SizedBox(width: 8),
-          Text('Biên lai chuyến đi', style: TextStyle(
+          Expanded(child: Text('Biên lai chuyến đi', style: TextStyle(
             fontSize: 19, fontWeight: FontWeight.w800,
-          )),
+          ))),
         ]),
         const Divider(color: AppColors.border),
         ReceiptInfoRow(
@@ -147,9 +147,9 @@ class _ReceiptPageState extends State<ReceiptPage> {
           Icon(Icons.account_balance_wallet_outlined,
               color: AppColors.cyan),
           SizedBox(width: 8),
-          Text('Phương thức thanh toán', style: TextStyle(
+          Expanded(child: Text('Phương thức thanh toán', style: TextStyle(
             fontSize: 16, fontWeight: FontWeight.bold,
-          )),
+          ))),
         ]),
         const SizedBox(height: 10),
         Row(children: <Widget>[
