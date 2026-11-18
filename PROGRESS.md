@@ -71,7 +71,7 @@ Cập nhật: 18/11/2026 (giờ Việt Nam). Repository `ThanhTaxiXanh/Bot-Taxim
 | `google_maps_flutter` | 2.19.0 |
 | `geolocator` | **14.1.2** (Bước 9) |
 | `permission_handler` | **12.0.3** (Bước 9, tương thích compileSdk ≥35 thay vì v13 đòi SDK37) |
-| `wakelock_plus` | **1.8.2** (Bước 9) |
+| `wakelock_plus` | **1.8.0** (Bước 9; tránh xung đột `dbus` với geolocator Linux) |
 | `flutter_lints` | 6.0.0 (dev) |
 
 Dart SDK >=3.12.0 <4.0.0. Flutter trong CI #13: 3.50.0 stable. Nên đặt repo variable `FLUTTER_VERSION=3.50.0`.
@@ -92,7 +92,7 @@ Dart SDK >=3.12.0 <4.0.0. Flutter trong CI #13: 3.50.0 stable. Nên đặt repo 
 
 - Báo cáo: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1
 - **CI #13** (commit `8634f59`), 4/4 hạng mục đều đạt: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44274743679
-- **CI Bước 9:** chưa có báo cáo cho commit mới; chưa xác nhận `flutter analyze`, `flutter test`, build APK và Android 13.
+- **CI #14**, commit `ba9383e`: thất bại ở `flutter create / pub get` vì `wakelock_plus 1.8.2` yêu cầu `dbus ^0.8.0` trong khi `geolocator_linux` yêu cầu `dbus ^0.7.3`. Chưa chạy analyzer/test/APK. Đã ghim lại `wakelock_plus 1.8.0` theo gợi ý resolver; chờ CI commit sửa lỗi xác nhận.
 - SHA-1 debug CI: `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`.
 - Repo public có debug keystore cố định; nên chuyển private. Google Maps key nằm trong GitHub Secret `MAPS_API_KEY`, không commit vào repo.
 
