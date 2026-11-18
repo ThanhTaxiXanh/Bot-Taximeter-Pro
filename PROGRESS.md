@@ -98,7 +98,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Ưu tiên sau khi hoàn tất Bước 11:** Thử trên Redmi Note 12 Pro: GPS, cước GPS, phí chờ/BOT, SQLite, khôi phục chuyến và cấu hình một máy chủ Nominatim/OSRM HTTPS được phép (hiện chưa có endpoint thực). Xác nhận thông tin rẽ và polyline/ETA theo tuyến thật; xử lý offline và phản hồi lỗi API. **Chưa mở Bước 12** cho tới khi người dùng yêu cầu tiếp tục.
+**Ưu tiên hiện tại:** Người dùng đã yêu cầu tiếp tục Bước 12. Đã chuẩn bị phần cơ sở cảnh báo ngưỡng tốc độ cá nhân; chạy CI xác minh các thay đổi, sau đó kiểm tra Redmi và đối chiếu Master Prompt gốc trước khi xác nhận trọn Bước 12. Chưa triển khai các bước tiếp theo.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -109,3 +109,13 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 - Chưa có dẫn đường giọng nói hay theo dõi tiến độ rẽ trực tiếp trên TripPage. BOT, kẹt xe và vị trí GPS không được suy đoán. Khoảng cách tuyến OSRM không thay thế GPS để tính cước đang chạy.
 - Cấu hình dịch vụ Nominatim/OSRM HTTPS được phép ngay trên điện thoại qua **Cài đặt → Máy chủ tìm địa chỉ & định tuyến → Lưu máy chủ tuyến**. URL lưu trong SharedPreferences, phục hồi khi mở app, để trống = tắt dịch vụ. Không cần đổi workflow/Google Maps API key. Hướng dẫn chính thức tại `docs/ROUTING_SETUP.md`.
 - Bổ sung `test/route_services_test.dart`, `test/route_live_widgets_test.dart` và `test/routing_server_settings_test.dart` dùng phản hồi giả lập, không cần mạng. **CI #23 commit `fb5519b` đạt đủ 4/4.** Hạ tầng Nominatim/OSRM tự quản hoặc được cấp phép và thử nghiệm tuyến thật trên điện thoại vẫn chưa thực hiện; không tuyên bố dịch vụ thực địa đã hoạt động.
+
+## Bước 12 — đang triển khai phần cơ sở, chờ CI và Master Prompt
+
+- **Tình trạng yêu cầu:** File `MASTER PROMPT.md` của cuộc trao đổi trước không có trong danh sách file repository hoặc tệp dự án truy cập được ở lượt này; **chưa thể xác nhận phạm vi Bước 12 theo nguyên văn Master Prompt**.
+- **Phần thực hiện có thể kiểm chứng:** `road_safety/speed_alert_engine.dart` xử lý ngưỡng tốc độ tài xế tự chọn; yêu cầu 3 mẫu liên tiếp vượt >5 km/h, 2 mẫu trở về dưới ngưỡng+1, khử nhiễu/mất GPS, giới hạn tần suất cảnh báo 30 giây.
+- `road_safety/speed_alert_controller.dart` lấy dữ liệu GPS đã lọc, từ chối mẫu kém/cũ và lưu cấu hình qua SharedPreferences; không mở thêm API hoặc quyền mới. Mặc định tắt.
+- `speed_alert_widgets.dart` hiển thị banner tại Home/Trip và màn Cài đặt `Cảnh báo tốc độ cá nhân` cho tài xế bật/tắt, đặt ngưỡng, lưu lại. Banner luôn ghi rõ đây **không phải giới hạn tốc độ pháp lý**.
+- Không dùng `traffic_signs.csv` hay `giao_thong_viet_nam.csv` làm nguồn tốc độ giới hạn tự động do chưa xác minh tính chính thức/độ mới. Biển giới hạn minh họa trên bản đồ vẫn được ghi nhãn dữ liệu mẫu.
+- Test mới: `test/speed_alert_engine_test.dart`, `test/speed_alert_widgets_test.dart`; CI dùng GPS/SharedPreferences giả lập, không có Google Maps API key.
+- Hướng dẫn và giới hạn tại `docs/SPEED_ALERT_SETUP.md`. **Chưa coi Bước 12 hoàn tất trước khi có Master Prompt gốc, kết quả CI đầy đủ và thử nghiệm trên điện thoại thật.**

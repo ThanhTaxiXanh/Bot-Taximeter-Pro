@@ -7,9 +7,9 @@ import '../../../shared/app_shell.dart';
 import '../../../shared/glass_widgets.dart';
 import '../../../shared/shared_map_view.dart';
 import '../data/gps_tracker.dart';
+import '../../road_safety/speed_alert_widgets.dart';
 import 'gps_permission_prompt.dart';
 import 'home_widgets.dart';
-/// Màn Home mock, không dùng GPS, Google Maps hay gọi mạng.
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
   @override
@@ -265,15 +265,13 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           _statusChips(),
-          const SizedBox(height: 8),
-          _map(mapHeight),
-          const SizedBox(height: 9),
-          HomeInfoCards(
+          const SpeedAlertBanner(),
+          const SizedBox(height: 8), _map(mapHeight),
+          const SizedBox(height: 9), HomeInfoCards(
             onCompany: () => _message('Taxi Hương Giang: thông tin mẫu'),
             onEstimate: () => context.push(AppRouter.route),
           ),
-          const SizedBox(height: 10),
-          _shortcuts(),
+          const SizedBox(height: 10), _shortcuts(),
           const SizedBox(height: 10),
           Row(
             children: <Widget>[

@@ -10,6 +10,7 @@ import '../../fare_meter/fare_calculator.dart';
 import '../../map_tracking/data/gps_tracker.dart';
 import '../../map_tracking/presentation/gps_permission_prompt.dart';
 import '../../map_tracking/presentation/home_widgets.dart';
+import '../../road_safety/speed_alert_widgets.dart';
 import '../trip_controller.dart';
 import 'trip_map_panel.dart';
 
@@ -244,6 +245,7 @@ class _TripPageState extends State<TripPage> {
                   Expanded(child: Text('Tiếp tục đi thẳng · 800 m (mẫu)')),
                 ]),
               ),
+              const SizedBox(height: 7), const SpeedAlertBanner(),
               const SizedBox(height: 7), _map(),
               const SizedBox(height: 8), _stats(),
               TextButton.icon(
