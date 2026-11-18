@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'core/app_config.dart';
 import 'core/router/app_router.dart';
+import 'core/theme/app_colors.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,15 +38,7 @@ class _BotTaximeterAppState extends State<BotTaximeterApp> {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: '${AppConfig.appNameLine1} ${AppConfig.appNameLine2}',
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF00E5FF),
-          brightness: Brightness.dark,
-        ),
-        scaffoldBackgroundColor: const Color(0xFF06152B),
-      ),
+      theme: AppTheme.dark,
       routerConfig: _router,
     );
   }

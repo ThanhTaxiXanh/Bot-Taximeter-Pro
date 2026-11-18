@@ -1,15 +1,16 @@
 # BỘT TAXIMETER PRO — TIẾN ĐỘ
 
-Cập nhật: 18/11/2026 (giờ Việt Nam). Repository: `ThanhTaxiXanh/Bot-Taximeter-Pro`, nhánh `main`.
+Cập nhật: 18/11/2026 (giờ Việt Nam). Repository: ThanhTaxiXanh/Bot-Taximeter-Pro, nhánh main.
 
 ## Đã làm
 
-- **Bước 1 — Hạ tầng**: thêm `pubspec.yaml`, `analysis_options.yaml`, `.gitignore`, `lib/main.dart`, `lib/core/app_config.dart`, `lib/core/router/app_router.dart`.
-- Tích hợp Riverpod `ProviderScope`; GoRouter có đúng 7 tuyến: `/`, `/search`, `/route`, `/trip`, `/history`, `/receipt`, `/settings`.
-- Tạo giao diện khung đơn giản, có nhãn phục vụ smoke test: Home và điều hướng, Tìm kiếm, Tuyến đường, Đang chạy chuyến (tạm dừng/tiếp tục/xác nhận kết thúc), Lịch sử, Biên lai, Cài đặt. Đây là placeholder, **chưa phải giao diện 7 ảnh thiết kế**.
-- `kCI` được khai báo là `const bool kCI = bool.fromEnvironment('CI')`; giai đoạn này không có gọi GPS, mạng hay Google Maps.
-- Chép **nguyên văn** 5 file từ Phụ lục A: `.github/workflows/ci.yml`, `ci/scripts/prepare_android.sh`, `ci/scripts/patch_android.py`, `ci/scripts/make_report.py`, `integration_test/app_smoke_test.dart`.
-- Giữ nguyên `README.md` và 7 ảnh trong `docs/design/`. Không tạo/chỉnh sửa `ci/debug.keystore`.
+- **Bước 1:** Khởi tạo Flutter, Riverpod, GoRouter, 7 tuyến màn hình, cờ CI và 5 file CI/CD nguyên văn Phụ lục A.
+- **Bản vá CI #1:** bỏ import Flutter Material không sử dụng trong integration_test/app_smoke_test.dart, commit 4bb69334. Chưa có báo cáo CI mới xác nhận bản vá.
+- **Bước 2:** palette navy/cyan, ThemeData tối, Be Vietnam Pro qua google_fonts, nền gradient, viền và thẻ kính mờ BackdropFilter, nút gradient neon, cụm nút bản đồ, ô thống kê, bản đồ mini CustomPainter.
+- Các widget dùng chung đã tạo: AppShell, GlassCard, NeonButton, MapControlButtons, StatCard, RoutePreviewPainter và RoutePreview.
+- main.dart áp dụng AppTheme.dark. Giữ nguyên 7 tuyến màn hình và nhãn chữ phục vụ smoke test.
+- Đồng bộ AppConfig.packageName và AppConfig.applicationId = vn.bottaximeter.bot_taximeter_pro theo package hiện tại người dùng đã chọn.
+- Giữ nguyên README.md, 7 ảnh thiết kế, ci/debug.keystore và 4 file CI/script.
 
 ## Cây thư mục hiện tại
 
@@ -18,61 +19,77 @@ Cập nhật: 18/11/2026 (giờ Việt Nam). Repository: `ThanhTaxiXanh/Bot-Taxi
 ├── .github/workflows/ci.yml
 ├── .gitignore
 ├── PROGRESS.md
-├── README.md (giữ nguyên)
+├── README.md
 ├── analysis_options.yaml
-├── ci/scripts/
-│   ├── make_report.py
-│   ├── patch_android.py
-│   └── prepare_android.sh
-├── docs/design/ (7 ảnh thiết kế và README.md giữ nguyên)
+├── ci/
+│   ├── debug.keystore (CI tạo, không chỉnh sửa)
+│   └── scripts/
+│       ├── prepare_android.sh
+│       ├── patch_android.py
+│       └── make_report.py
+├── docs/design/ (7 ảnh và README.md)
 ├── integration_test/app_smoke_test.dart
 ├── lib/
 │   ├── core/
 │   │   ├── app_config.dart
-│   │   └── router/app_router.dart
+│   │   ├── router/app_router.dart
+│   │   └── theme/app_colors.dart
+│   ├── shared/
+│   │   ├── app_shell.dart
+│   │   ├── glass_widgets.dart
+│   │   └── route_preview_painter.dart
 │   └── main.dart
 └── pubspec.yaml
 ```
 
-`android/` chưa có trong repo; workflow sẽ tạo ở CI bằng `flutter create`.
+`android/` chưa có trong repo, CI tự tạo bằng flutter create.
 
-## Dependencies đã ghim
+## Dependencies và phiên bản
 
 | Package | Phiên bản |
 |---|---|
-| `flutter_riverpod` | `3.5.0` |
-| `go_router` | `18.1.4` |
-| `flutter_lints` (dev) | `6.0.0` |
-| `flutter_test` (dev) | Flutter SDK |
-| `integration_test` (dev) | Flutter SDK |
+| flutter_riverpod | 3.5.0 |
+| go_router | 18.1.4 |
+| google_fonts | 8.1.0 |
+| flutter_lints (dev) | 6.0.0 |
+| flutter_test (dev) | Flutter SDK |
+| integration_test (dev) | Flutter SDK |
 
-SDK Dart yêu cầu `>=3.12.0 <4.0.0`. Flutter của CI: **chưa có báo cáo CI nên chưa biết bản chính xác**; sau build đầu tiên, ghi lại số từ báo cáo và thiết lập biến `FLUTTER_VERSION`.
+- Dart SDK: >=3.12.0 <4.0.0.
+- Báo cáo CI #1 dùng Flutter 3.50.0 stable. Khuyến nghị ghim biến FLUTTER_VERSION = 3.50.0.
 
 ## Quyết định kỹ thuật
 
-- Đầu tiên chỉ dùng Flutter UI cơ bản, Riverpod, GoRouter. Các chức năng tính cước, bản đồ, GPS, lưu SQLite, VietQR sẽ thêm theo đúng thứ tự lộ trình.
-- Tạo GoRouter mới khi app khởi tạo để các bài kiểm thử không dùng lại lịch sử điều hướng từ bài trước.
-- `AppConfig.appNameLine1` và `appNameLine2` là nguồn duy nhất cho tên ứng dụng trong Dart.
-- Mã Flutter do AI mới viết; 5 file CI lấy nguyên văn từ Master Prompt.
-- Chưa có mã tính cước/logic thuần; unit test sẽ được thêm đồng thời với các module liên quan.
+- Xây dựng UI mock trước, logic cước, GPS, OSM, SQLite, PDF, VietQR sẽ làm ở các bước riêng.
+- Cờ kCI=true không dùng Google Fonts tải mạng: AppTheme chọn TextTheme hệ thống. Không có animation lặp vô hạn.
+- Trên thiết bị thật, google_fonts được cache sau lần tải đầu. Nếu mở app lần đầu offline mà chưa có cache, cần thử fallback và cân nhắc đóng gói Be Vietnam Pro trong assets ở bước hoàn thiện.
+- RoutePreviewPainter vẽ lộ trình giả từ điểm chuẩn hóa trong khung gradient. Không khởi tạo GoogleMap và không gọi Static Maps API.
+- Các widget AppShell/GlassCard/NeonButton/MapControlButtons/StatCard được định nghĩa trong Bước 2; việc tích hợp đầy đủ vào Home ở Bước 3.
+- Chỉ dùng ứng dụng cá nhân; mã mới ở Bước 2 không gọi mạng/GPS/Google Maps.
+- Tên package hiện dùng trong Google Cloud Console: vn.bottaximeter.bot_taximeter_pro.
 
 ## Kết quả CI gần nhất
 
-- **Chưa có kết quả** từ GitHub Actions cho commit Bước 1. Không thể xác nhận `flutter analyze`, `flutter test`, smoke test hay APK đã đạt.
-- File smoke test của Phụ lục A giữ nguyên theo chỉ định; giao diện chi tiết sẽ được triển khai lần lượt ở các bước sau.
+- Issue: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1
+- **CI #1**, commit 00e9db5: Flutter 3.50.0, unit/widget test đạt, APK debug đạt, smoke test Android 13 đạt, flutter analyze có 1 warning unused import.
+- Warning đã được sửa trong commit 4bb69334. Chưa có báo cáo đúng commit Bước 2 nên chưa thể xác nhận CI xanh.
+- SHA-1 khóa debug: 8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4.
 
-## Lỗi đã biết / điểm cần đối chiếu
+## Lỗi đã biết / rủi ro
 
-- **Khác biệt application ID**: lệnh CI `flutter create --org vn.bottaximeter --project-name bot_taximeter_pro .` dự kiến sinh Android `applicationId` là `vn.bottaximeter.bot_taximeter_pro`, trong khi Phụ lục B yêu cầu giới hạn Google Maps key với `vn.bottaximeter.pro`. `AppConfig.packageName` không thay đổi `applicationId` thật. Giữ nguyên bộ CI theo yêu cầu; cần thống nhất package/điều chỉnh Android trước khi bật khóa giới hạn Maps ở Bước 8.
-- Repo GitHub hiện tại là **công khai**. Sau khi CI đẩy `ci/debug.keystore`, người khác có thể lấy khóa debug, ký APK có cùng chữ ký. Cân nhắc chuyển repo sang riêng tư.
-- Giao diện hiện tại chỉ là khung; dữ liệu đồng hồ, bản đồ, các màn 2–7 vẫn là placeholder.
+- Chưa chạy Flutter trực tiếp ở phiên này, chờ báo cáo CI theo commit mới để kiểm chứng.
+- Repo hiện công khai và lưu khóa ký debug cố định, ai có khóa đều có thể ký APK trùng chứng chỉ; nên chuyển repository về private.
+- Google Maps thật chưa tích hợp (Bước 8), chưa thể xác nhận khóa Maps hoạt động.
+- Be Vietnam Pro có thể cần tải lần đầu; offline-first hoàn chỉnh cần gói font trong assets hoặc kiểm chứng fallback.
+- Các màn hình hiện vẫn là placeholder, mới có theme và component dùng chung.
 
 ## Cần thử trên điện thoại
 
-- APK khởi chạy trên Redmi Note 12 Pro; chuyển giữa 7 màn và xác nhận kết thúc chuyến.
-- Bước sau: bản đồ Google Maps thật, quyền vị trí, định vị GPS, lọc nhiễu, tốc độ hiển thị, thông báo dịch vụ nền, tối ưu pin MIUI.
-- Kiểm tra SHA-1 khóa debug và package thực tế trước khi giới hạn Maps API key.
+- APK debug mới trên Redmi Note 12 Pro: khởi động, hiển thị tiếng Việt, font, điều hướng 7 màn và hộp thoại kết thúc.
+- Khi tích hợp AppShell ở Bước 3, xem viền cyan, thẻ kính mờ và gradient trên màn thực tế.
+- Sau Bước 8–9: GPS thật, tốc độ, độ chính xác, bản đồ, quyền vị trí, dịch vụ chạy nền và tối ưu pin MIUI.
+- Kiểm tra Maps với package vn.bottaximeter.bot_taximeter_pro và SHA-1 trên CI.
 
 ## Việc tiếp theo
 
-**Bước 2 — Theme + token màu + shared widgets**: `AppShell`, `GlassCard`, `NeonButton`, `MapControlButtons`, `StatCard`, `RoutePreviewPainter`. Giữ tương thích nhãn smoke test và không sửa bộ CI khi không có lỗi liên quan.
+**Bước 3 — Màn 1 Home mock:** dùng AppShell và các shared widgets, nền bản đồ giả gradient + painter, các chip GPS/3D/Follow xe, tốc độ và biển số, cụm nút bản đồ, 4 nút chức năng, Bắt đầu/Lịch sử. Giữ nguyên các nhãn chữ smoke test.
