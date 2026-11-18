@@ -18,6 +18,8 @@ Máy chủ demo OSRM `router.project-osrm.org` chỉ phục vụ thử nghiệm 
 
 ## Cấu hình máy chủ được phép
 
+**Cách thuận tiện trên APK GitHub Actions:** Mở **Cài đặt → Máy chủ tìm địa chỉ & định tuyến**, nhập hai URL HTTPS của nhà cung cấp được phép, bấm **Lưu máy chủ tuyến**. Cấu hình lưu trên điện thoại và tự khôi phục sau khi mở lại ứng dụng. Để trống trường URL để tắt dịch vụ. Không cần sửa CI hoặc tạo APK mới khi đổi nhà cung cấp.
+
 Ví dụ xây APK trên máy có Flutter:
 
 ```bash
@@ -35,7 +37,7 @@ Thay `example.com` bằng các máy chủ HTTPS thật đã được cho phép. 
 - Nominatim: yêu cầu thủ công, tối đa 5 địa chỉ/lần, cache trong RAM 24 giờ tối đa 64 câu tìm; cách nhau tối thiểu 1,2 giây trong một tiến trình; không có autocomplete.
 - OSRM: yêu cầu thủ công, tối đa 3 điểm, cache trong RAM 10 phút tối đa 24 tuyến; không tự gọi khi GPS thay đổi.
 - Truy vấn máy chủ do bên vận hành triển khai phải có **rate limit dùng chung giữa các thiết bị**, caching/policy phù hợp và giám sát chi phí. Giới hạn trong app không đảm bảo giới hạn tổng của toàn bộ đội xe.
-- Base URL là tham số build; nếu bên cung cấp yêu cầu chuyển máy chủ không cần nâng cấp ứng dụng, cần thiết lập proxy/định tuyến DNS do chính bên vận hành điều khiển trước khi phát hành cho nhiều tài xế.
+- Trên Android có thể đổi URL trực tiếp trong Cài đặt mà không cập nhật APK. Với đội xe nhiều máy, vẫn cần proxy/cache/rate-limit chung trên máy chủ do bên vận hành kiểm soát.
 
 ## Quy trình kiểm tra Redmi Note 12 Pro
 

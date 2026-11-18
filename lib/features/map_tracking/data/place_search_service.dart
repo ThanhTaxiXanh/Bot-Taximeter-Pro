@@ -33,12 +33,21 @@ class NominatimPlaceService {
   }) : _request = request, _clock = clock ?? DateTime.now;
 
   static final instance = NominatimPlaceService();
-  final String baseUrl;
+  String baseUrl;
   final PlaceRequest? _request;
   final DateTime Function() _clock;
   final Map<String, (DateTime, List<LocatedPlace>)> _cache = {};
   DateTime? _lastRequest;
   bool _inFlight = false;
+
+  /// Cho phép đổi máy chủ ngay trong Cài đặt, xóa cache cũ theo host.
+  void setBaseUrl(String value) {
+    final next = value.trim();
+    if (next == baseUrl) return;
+    baseUrl = next;
+    _cache.clear();
+    _lastRequest = null;
+  }
 
   bool get configured {
     final uri = Uri.tryParse(baseUrl.trim());

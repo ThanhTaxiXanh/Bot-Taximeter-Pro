@@ -19,7 +19,7 @@ Cập nhật: 18/11/2026 (giờ Việt Nam). Repo `ThanhTaxiXanh/Bot-Taximeter-P
 - **Màn Đang chạy chuyến** hiển thị tổng cước/quãng đường/giây chờ từ controller, có cộng BOT chọn nhanh/nhập thủ công, xác nhận Kết thúc và truyền số liệu về màn Biên lai. Cước hiển thị là **tham khảo theo GPS, chưa phải đồng hồ taxi kiểm định**. Không có GPS hợp lệ thì không có quãng đường tính mới.
 - **Cài đặt → Biểu phí & Phí chờ:** chỉnh 5 đơn giá, tổng số phút miễn phí (0/3/5/10/15 hoặc số tùy chỉnh 0–1440), bật/tắt tự Waiting. Lưu trên thiết bị bằng `shared_preferences`, đọc khi bắt đầu một cuốc mới. Cấu hình của cuốc đang chạy nằm trong snapshot, không thay đổi giữa chuyến.
 - Các bài kiểm thử mới: `test/fare_calculator_test.dart`, `test/trip_controller_test.dart`; cập nhật `test/trip_page_test.dart` bỏ số liệu giả 72.000 đ/14:26. Giữ nguyên nhãn CI `Tổng cước`, `Thời gian chờ`, `Tạm dừng`, `Tiếp tục`, `Kết thúc`, `Biên lai chuyến đi`, `Xác nhận`, `Hủy`.
-- **Kiểm chứng Bước 10:** CI #17, #19 đều có widget test lỗi dù workflow success. CI #20 (commit `2b87ec1`) analyzer/APK/smoke đạt, nhưng widget test bị treo 10 phút. Đã tách widget test khỏi singleton/timer và loại bỏ fixture bất đồng bộ, đang chờ CI xác nhận. **Chưa đánh dấu Bước 10 hoàn tất trước khi test sạch.**
+- **Kiểm chứng Bước 10:** CI #17, #19 đều có widget test lỗi dù workflow success. CI #20 (commit `2b87ec1`) analyzer/APK/smoke đạt, nhưng widget test bị treo 10 phút. Đã tách widget test khỏi singleton/timer và loại bỏ fixture bất đồng bộ, đang chờ CI xác nhận. **CI #22 (commit `9115245`) đã có `flutter test` chạy sạch theo job log; vẫn cần kết quả smoke Android 13 trước khi xác nhận đủ 4/4.**
 
 ## Cây thư mục chính
 
@@ -84,7 +84,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 ## Kết quả CI
 
 - **CI #16** commit `960bdf5`: 4/4 đạt. https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44284562646
-- **Bước 10:** CI #20: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44311371146 (test chưa đạt). Sửa fixture sẽ được kiểm chứng cùng CI của Bước 11. Xem Issue #1: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1
+- **Bước 10:** CI #20 test lỗi: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44311371146. CI #21 đã sửa lỗi fixture Step10, nhưng phát hiện lỗi UI mới của Step11. CI #22 (https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44315473823): analyzer ✅, test ✅ (đối chiếu job log), APK ✅, smoke Android 13 đang kiểm tra. Issue #1: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1
 - SHA-1 debug: `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`.
 
 ## Cần thử trên điện thoại
@@ -107,5 +107,5 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 - Màn Tìm kiếm hỗ trợ chọn tọa độ thật truyền sang Lập tuyến. Màn Lập tuyến dùng OSRM/polyline trên Google Maps, xem các bước rẽ, ước tính cước bằng `FareCalculator.estimate` với cấu hình trên máy.
 - Mọi kết quả mẫu được ghi nhãn rõ và vẫn dùng trong CI; không xin Google Maps API key cho widget test.
 - Chưa có dẫn đường giọng nói hay theo dõi tiến độ rẽ trực tiếp trên TripPage. BOT, kẹt xe và vị trí GPS không được suy đoán. Khoảng cách tuyến OSRM không thay thế GPS để tính cước đang chạy.
-- Cách cấp máy chủ hợp lệ, hạn chế chi phí và quy trình thử nghiệm tại `docs/ROUTING_SETUP.md`. Cần cấu hình Nominatim/OSRM tự quản hoặc được cấp phép trước khi tính tuyến thật trên điện thoại.
-- Bổ sung `test/route_services_test.dart` và `test/route_live_widgets_test.dart` dùng phản hồi giả lập, không cần mạng. **Chưa có kết quả CI mới cho toàn bộ Bước 11.**
+- Cấu hình dịch vụ Nominatim/OSRM HTTPS được phép ngay trên điện thoại qua **Cài đặt → Máy chủ tìm địa chỉ & định tuyến → Lưu máy chủ tuyến**. URL lưu trong SharedPreferences, phục hồi khi mở app, để trống = tắt dịch vụ. Không cần đổi workflow/Google Maps API key. Hướng dẫn chính thức tại `docs/ROUTING_SETUP.md`.
+- Bổ sung `test/route_services_test.dart`, `test/route_live_widgets_test.dart` và `test/routing_server_settings_test.dart` dùng phản hồi giả lập, không cần mạng. **CI #22 đạt analyzer, test, APK; đang xác minh smoke, sau đó cần một CI mới cho tính năng URL lưu trên máy.**

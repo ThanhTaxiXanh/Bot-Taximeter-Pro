@@ -60,10 +60,19 @@ class OsrmRouteService {
       : _request = request, _clock = clock ?? DateTime.now;
 
   static final instance = OsrmRouteService();
-  final String baseUrl;
+  String baseUrl;
   final RouteRequest? _request;
   final DateTime Function() _clock;
   final Map<String, (DateTime, List<PlannedRoute>)> _cache = {};
+
+  /// Cho phép đổi máy chủ ngay trong Cài đặt, xóa cache cũ theo host.
+  void setBaseUrl(String value) {
+    final next = value.trim();
+    if (next == baseUrl) return;
+    baseUrl = next;
+    _cache.clear();
+    
+  }
 
   bool get configured {
     final url = Uri.tryParse(baseUrl.trim());

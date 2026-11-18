@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'core/app_config.dart';
 import 'features/trip/trip_controller.dart';
+import 'features/map_tracking/data/routing_server_config.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_colors.dart';
 
@@ -27,6 +28,8 @@ class _BotTaximeterAppState extends State<BotTaximeterApp> {
     super.initState();
     _router = AppRouter.createRouter();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Đọc URL máy chủ đã lưu, không gửi yêu cầu mạng khi khởi động.
+      await loadSavedRoutingServers();
       // Trên máy thật, phát hiện snapshot rồi mở màn hỏi khôi phục.
       final found = await TripController.instance.loadPending();
       if (mounted && found) _router.go(AppRouter.trip);
