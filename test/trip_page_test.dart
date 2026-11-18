@@ -6,13 +6,20 @@ import 'package:bot_taximeter_pro/features/trip/presentation/trip_page.dart';
 import 'package:bot_taximeter_pro/features/trip/trip_controller.dart';
 import 'package:bot_taximeter_pro/shared/glass_widgets.dart';
 
-Future<void> openTrip(WidgetTester tester) async {
+Future<TripController> openTrip(WidgetTester tester) async {
+  final controller = TripController(
+    store: MemoryTripStore(), runTimer: false,
+  );
+  await tester.runAsync(() => controller.begin());
   tester.view.physicalSize = const Size(430, 940);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  addTearDown(() async { await TripController.instance.complete(); });
-  final router = AppRouter.createRouter();
+  addTearDown(() async {
+    await controller.complete();
+    controller.dispose();
+  });
+  final router = AppRouter.createRouter(tripController: controller);
   addTearDown(router.dispose);
   await tester.pumpWidget(MaterialApp.router(
     theme: ThemeData.dark(),
@@ -21,20 +28,12 @@ Future<void> openTrip(WidgetTester tester) async {
   router.go(AppRouter.trip);
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 350));
-  final finishFinder = find.widgetWithText(NeonButton, 'Kết thúc');
-  // Không pumpAndSettle vì đồng hồ chuyến dùng Timer.periodic.
-  for (var attempt = 0; attempt < 20; attempt++) {
-    await tester.pump(const Duration(milliseconds: 20));
-    if (finishFinder.evaluate().isNotEmpty &&
-        tester.widget<NeonButton>(finishFinder).onPressed != null) {
-      break;
-    }
-  }
   expect(find.byType(TripPage), findsOneWidget);
-  expect(TripController.instance.isActive, isTrue);
-  final finishButton = tester.widget<NeonButton>(finishFinder);
-  expect(finishButton.onPressed, isNotNull,
-      reason: 'Phải khởi tạo xong chuyến trước khi bấm Kết thúc');
+  expect(controller.isActive, isTrue);
+  expect(tester.widget<NeonButton>(
+    find.widgetWithText(NeonButton, 'Kết thúc'),
+  ).onPressed, isNotNull);
+  return controller;
 }
 
 /// Giới hạn tìm đồng hồ trong đúng thẻ, tránh trùng 00:00 giữa hai thẻ.
@@ -49,18 +48,20 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues(<String, Object>{}));
 
   testWidgets('Tạm dừng và tiếp tục dùng đồng hồ controller', (tester) async {
-    await openTrip(tester);
+    final controller = await openTrip(tester);
     expect(find.text('Tổng cước'), findsOneWidget);
     expect(find.text('Thời gian chờ'), findsOneWidget);
     expect(statValue('Thời gian chuyến', '00:00'), findsOneWidget);
     expect(statValue('Thời gian chờ', '00:00'), findsOneWidget);
-    await tester.pump(const Duration(seconds: 1));
+    controller.tick(intervalSeconds: 1);
+    await tester.pump();
     expect(statValue('Thời gian chuyến', '00:01'), findsOneWidget);
 
     await tester.tap(find.text('Tạm dừng'));
     await tester.pump();
     expect(find.text('Tiếp tục'), findsOneWidget);
-    await tester.pump(const Duration(seconds: 1));
+    controller.tick(intervalSeconds: 1);
+    await tester.pump();
     expect(statValue('Thời gian chờ', '00:01'), findsOneWidget);
     await tester.tap(find.text('Tiếp tục'));
     await tester.pump();

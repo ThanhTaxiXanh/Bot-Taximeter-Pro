@@ -14,13 +14,15 @@ import '../trip_controller.dart';
 import 'trip_map_panel.dart';
 
 class TripPage extends StatefulWidget {
-  const TripPage({super.key});
+  const TripPage({super.key, this.controller});
+  final TripController? controller;
   @override
   State<TripPage> createState() => _TripPageState();
 }
 
 class _TripPageState extends State<TripPage> {
-  final _controller = TripController.instance;
+  late final TripController _controller =
+      widget.controller ?? TripController.instance;
   final _mapKey = GlobalKey<SharedMapViewState>();
   bool _busy = true, _is3D = true, _traffic = true, _follow = true;
 
