@@ -6,6 +6,7 @@ import '../../features/map_tracking/presentation/home_page.dart';
 import '../../features/map_tracking/presentation/search_page.dart';
 import '../../features/map_tracking/presentation/route_page.dart';
 import '../../features/trip/presentation/trip_page.dart';
+import '../../features/history/presentation/history_page.dart';
 
 /// Bảy tuyến màn hình cơ bản. Giao diện hoàn chỉnh được bổ sung từ bước 2.
 abstract final class AppRouter {
@@ -34,7 +35,7 @@ abstract final class AppRouter {
             },
           ),
           GoRoute(path: trip, builder: (_, _) => const TripPage()),
-          GoRoute(path: history, builder: (_, _) => const _HistoryPage()),
+          GoRoute(path: history, builder: (_, _) => const HistoryPage()),
           GoRoute(
             path: receipt,
             builder: (_, state) {
@@ -118,20 +119,6 @@ class _NavButton extends StatelessWidget {
       ),
     );
   }
-}
-
-class _HistoryPage extends StatelessWidget {
-  const _HistoryPage();
-
-  @override
-  Widget build(BuildContext context) => const _PageShell(
-        title: 'Lịch sử cuốc xe & Doanh thu',
-        children: <Widget>[
-          Text('Các cuốc xe gần đây'),
-          Text('Chưa có chuyến đi được lưu.'),
-          _NavButton('Xem chi tiết', AppRouter.receipt),
-        ],
-      );
 }
 
 class _ReceiptPage extends StatelessWidget {
