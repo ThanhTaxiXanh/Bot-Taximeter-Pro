@@ -1,0 +1,23 @@
+# Flutter và Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+
+# Công cụ phát triển
+.idea/
+*.iml
+.vscode/
+*.log
+
+# Các file sinh ra trong CI (không bỏ qua .github/, ci/, test/)
+android/.gradle/
+android/local.properties
+android/key.properties
+*.jks
+*.keystore
+!ci/debug.keystore

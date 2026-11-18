@@ -1,0 +1,311 @@
+name: CI - Kiểm thử và build APK debug
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      run_ui_tests:
+        description: 'Chạy kiểm thử giao diện trên máy ảo Android 13'
+        type: boolean
+        default: true
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  APK_NAME: BOT-TaxiMeterPro-debug.apk
+  RELEASE_TAG: debug-latest
+  APP_LABEL: BOT TAXIMETER PRO
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # ---------------------------------------------------------------
+  # JOB 1: phân tích tĩnh -> test đơn vị/widget -> build APK debug
+  # ---------------------------------------------------------------
+  build:
+    name: Phân tích, test, build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    outputs:
+      analyze: ${{ steps.analyze.outcome }}
+      unit: ${{ steps.unit.outcome }}
+      apk: ${{ steps.apk.outcome }}
+      sha1: ${{ steps.keystore.outputs.sha1 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ vars.FLUTTER_VERSION || 'any' }}
+          cache: true
+
+      - name: Ghi phiên bản Flutter
+        run: |
+          mkdir -p logs
+          flutter --version | tee logs/flutter-version.txt
+
+      - name: Chuẩn bị thư mục android/
+        env:
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: bash ci/scripts/prepare_android.sh 2>&1 | tee logs/prepare.log
+
+      - name: Giữ khóa ký debug ổn định (cài đè không phải gỡ app)
+        id: keystore
+        run: |
+          mkdir -p ~/.android
+          if [ ! -f ci/debug.keystore ]; then
+            echo "Chưa có ci/debug.keystore, tạo mới (chỉ một lần)."
+            mkdir -p ci
+            keytool -genkeypair -v -keystore ci/debug.keystore \
+              -storepass android -alias androiddebugkey -keypass android \
+              -keyalg RSA -keysize 2048 -validity 36500 \
+              -dname "CN=Android Debug,O=Android,C=US"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add ci/debug.keystore
+            git commit -m "ci: thêm debug keystore ổn định" || true
+            git pull --rebase origin "${GITHUB_REF_NAME}" || true
+            git push origin "HEAD:${GITHUB_REF_NAME}" \
+              || echo "::warning::Không push được keystore (kiểm tra quyền ghi của workflow)."
+          fi
+          cp ci/debug.keystore ~/.android/debug.keystore
+          SHA1=$(keytool -list -v -keystore ci/debug.keystore -storepass android \
+            -alias androiddebugkey | grep 'SHA1:' | head -1 | sed 's/.*SHA1: //')
+          echo "sha1=${SHA1}" >> "$GITHUB_OUTPUT"
+          echo "SHA-1 khóa debug: ${SHA1}"
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('pubspec.yaml', 'pubspec.lock') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: flutter pub get
+        run: flutter pub get 2>&1 | tee logs/pubget.log
+
+      - name: Phân tích tĩnh (flutter analyze)
+        id: analyze
+        continue-on-error: true
+        run: flutter analyze --no-fatal-infos 2>&1 | tee logs/analyze.log
+
+      - name: Kiểm thử đơn vị và widget (flutter test)
+        id: unit
+        continue-on-error: true
+        run: |
+          if [ -d test ] && [ -n "$(find test -name '*_test.dart' | head -1)" ]; then
+            flutter test --reporter expanded 2>&1 | tee logs/test.log
+          else
+            echo "Chưa có file test nào (test/*_test.dart), bỏ qua." | tee logs/test.log
+          fi
+
+      # Mặc định luôn build APK để bạn thử trên điện thoại, kể cả khi test lỗi.
+      # Muốn chặn build khi test lỗi: đặt biến repository REQUIRE_GREEN = true.
+      - name: Build APK debug (arm64, cho Redmi Note 12 Pro)
+        id: apk
+        if: ${{ vars.REQUIRE_GREEN != 'true' || (steps.analyze.outcome == 'success' && steps.unit.outcome == 'success') }}
+        run: |
+          flutter build apk --debug --target-platform android-arm64 \
+            --build-number="${{ github.run_number }}" 2>&1 | tee logs/build.log
+          test -f build/app/outputs/flutter-apk/app-debug.apk
+          cp build/app/outputs/flutter-apk/app-debug.apk "${APK_NAME}"
+
+      - name: Tải APK lên Artifacts (giữ 14 ngày)
+        if: ${{ steps.apk.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-debug
+          path: ${{ env.APK_NAME }}
+          retention-days: 14
+
+      - name: Đăng APK lên GitHub Releases (tải thẳng từ điện thoại)
+        if: ${{ steps.apk.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > release-notes.md <<EOF
+          Build #${{ github.run_number }} | commit ${GITHUB_SHA::7} | $(date -u +'%Y-%m-%d %H:%M UTC')
+          Phân tích tĩnh: ${{ steps.analyze.outcome }} | Test đơn vị: ${{ steps.unit.outcome }}
+          SHA-1 khóa debug: ${{ steps.keystore.outputs.sha1 }}
+          Chỉ dùng để kiểm thử, ký bằng khóa debug.
+          EOF
+          sed -i 's/^[[:space:]]*//' release-notes.md
+          gh release delete "$RELEASE_TAG" --cleanup-tag --yes || true
+          gh release create "$RELEASE_TAG" "$APK_NAME" --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "APK debug mới nhất (#${{ github.run_number }})" \
+            --notes-file release-notes.md
+          {
+            echo "### APK debug đã sẵn sàng"
+            echo "Tải trên điện thoại: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${RELEASE_TAG}"
+            echo ""
+            echo "SHA-1 khóa debug (dùng để giới hạn Maps API key): \`${{ steps.keystore.outputs.sha1 }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Lưu log
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-build
+          path: logs/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # ---------------------------------------------------------------
+  # JOB 2: kiểm thử giao diện trên máy ảo Android 13 (API 33).
+  # Không chặn việc build APK; kết quả đưa vào báo cáo.
+  # Tắt: đặt biến repository RUN_UI_TESTS = false.
+  # ---------------------------------------------------------------
+  ui-smoke:
+    name: Kiểm thử giao diện (máy ảo Android 13)
+    if: ${{ vars.RUN_UI_TESTS != 'false' && (github.event_name != 'workflow_dispatch' || inputs.run_ui_tests) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Có integration_test không?
+        id: has
+        run: |
+          mkdir -p logs
+          if [ -f integration_test/app_smoke_test.dart ]; then
+            echo "yes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Chưa có integration_test/app_smoke_test.dart, bỏ qua." | tee logs/ui.log
+            echo "skipped" > logs/ui_outcome.txt
+          fi
+
+      - name: Bật KVM
+        if: ${{ steps.has.outputs.yes == 'true' }}
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - uses: actions/setup-java@v4
+        if: ${{ steps.has.outputs.yes == 'true' }}
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        if: ${{ steps.has.outputs.yes == 'true' }}
+        with:
+          channel: stable
+          flutter-version: ${{ vars.FLUTTER_VERSION || 'any' }}
+          cache: true
+
+      - name: Chuẩn bị android/ và dependencies
+        if: ${{ steps.has.outputs.yes == 'true' }}
+        env:
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: |
+          bash ci/scripts/prepare_android.sh
+          flutter pub get
+
+      - name: Chạy test giao diện trên Android 13
+        id: uitest
+        if: ${{ steps.has.outputs.yes == 'true' }}
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: flutter test integration_test --dart-define=CI=true > logs/ui.log 2>&1
+
+      - name: Ghi kết quả test giao diện
+        if: ${{ always() && steps.has.outputs.yes == 'true' }}
+        run: |
+          echo "${{ steps.uitest.outcome }}" > logs/ui_outcome.txt
+          tail -n 40 logs/ui.log || true
+
+      - name: Lưu log
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-ui
+          path: logs/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # ---------------------------------------------------------------
+  # JOB 3: gom kết quả thành báo cáo Markdown, ghi vào Issue
+  # "CI: báo cáo mới nhất" để bạn dán cho AI.
+  # ---------------------------------------------------------------
+  report:
+    name: Báo cáo cho AI
+    needs: [build, ui-smoke]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: logs-*
+          path: logs
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: Tạo báo cáo
+        env:
+          ANALYZE_OUTCOME: ${{ needs.build.outputs.analyze }}
+          UNIT_OUTCOME: ${{ needs.build.outputs.unit }}
+          APK_OUTCOME: ${{ needs.build.outputs.apk }}
+          BUILD_JOB_RESULT: ${{ needs.build.result }}
+          UI_JOB_RESULT: ${{ needs.ui-smoke.result }}
+          SHA1: ${{ needs.build.outputs.sha1 }}
+        run: |
+          mkdir -p logs
+          python3 ci/scripts/make_report.py > ci-report.md
+          cat ci-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Lưu báo cáo
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-report
+          path: ci-report.md
+          retention-days: 14
+
+      - name: Cập nhật Issue báo cáo
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TITLE="CI: báo cáo mới nhất"
+          NUM=$(gh issue list --state all --search "\"$TITLE\" in:title" \
+            --json number --jq '.[0].number' || true)
+          if [ -n "${NUM:-}" ]; then
+            gh issue edit "$NUM" --body-file ci-report.md
+            gh issue reopen "$NUM" || true
+          else
+            gh issue create --title "$TITLE" --body-file ci-report.md
+          fi
