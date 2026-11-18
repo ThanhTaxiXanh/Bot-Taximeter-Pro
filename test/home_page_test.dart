@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bot_taximeter_pro/core/router/app_router.dart';
+import 'package:bot_taximeter_pro/features/map_tracking/presentation/home_widgets.dart';
 
 void main() {
   testWidgets('Home có đủ nút và chuyển chế độ bản đồ mô phỏng',
@@ -52,15 +53,19 @@ void main() {
     ));
     await tester.pump(const Duration(milliseconds: 150));
     await tester.tap(find.text('60'));
-    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Giới hạn tốc độ (minh họa)'), findsOneWidget);
 
-    await tester.tap(find.text('80 km/h'));
-    // Bottom sheet có hoạt ảnh đóng; đợi route hoàn tất và setState.
-    for (var i = 0; i < 8; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
-    expect(find.text('80'), findsOneWidget);
+    // Chip ở ngoài khung nhìn trong test 430×940: kiểm tra callback thay
+    // vì bấm tọa độ ngoài màn hình rồi nhận kết quả sai.
+    final choice = tester.widget<ActionChip>(
+      find.widgetWithText(ActionChip, '80 km/h'),
+    );
+    choice.onPressed!.call();
+    await tester.pump();
+    final panel = tester.widget<HomeSpeedPanel>(find.byType(HomeSpeedPanel));
+    expect(panel.limitKmh, 80);
   });
 
   testWidgets('Tìm kiếm ở Home mở đúng tuyến màn hình',

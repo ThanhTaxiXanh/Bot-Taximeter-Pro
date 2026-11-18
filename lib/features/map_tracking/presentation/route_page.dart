@@ -161,7 +161,7 @@ class _RoutePageState extends State<RoutePage> {
 
   Widget _stats() => GridView.count(
     crossAxisCount: 2,
-    childAspectRatio: 2.05,
+    childAspectRatio: 1.0,
     crossAxisSpacing: 7,
     mainAxisSpacing: 7,
     shrinkWrap: true,

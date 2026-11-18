@@ -5,6 +5,7 @@ import '../app_config.dart';
 import '../../features/map_tracking/presentation/home_page.dart';
 import '../../features/map_tracking/presentation/search_page.dart';
 import '../../features/map_tracking/presentation/route_page.dart';
+import '../../features/trip/presentation/trip_page.dart';
 
 /// Bảy tuyến màn hình cơ bản. Giao diện hoàn chỉnh được bổ sung từ bước 2.
 abstract final class AppRouter {
@@ -32,9 +33,18 @@ abstract final class AppRouter {
               );
             },
           ),
-          GoRoute(path: trip, builder: (_, _) => const _TripPage()),
+          GoRoute(path: trip, builder: (_, _) => const TripPage()),
           GoRoute(path: history, builder: (_, _) => const _HistoryPage()),
-          GoRoute(path: receipt, builder: (_, _) => const _ReceiptPage()),
+          GoRoute(
+            path: receipt,
+            builder: (_, state) {
+              final data = state.extra;
+              return _ReceiptPage(
+                snapshot: data is Map<String, String>
+                    ? data : const <String, String>{},
+              );
+            },
+          ),
           GoRoute(path: settings, builder: (_, _) => const _SettingsPage()),
         ],
       );
@@ -93,71 +103,21 @@ class _PageShell extends StatelessWidget {
 }
 
 class _NavButton extends StatelessWidget {
-  const _NavButton(this.label, this.path, {this.primary = false});
+  const _NavButton(this.label, this.path);
 
   final String label;
   final String path;
-  final bool primary;
 
   @override
   Widget build(BuildContext context) {
-    final onPressed = () => context.push(path);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
-      child: primary
-          ? FilledButton(onPressed: onPressed, child: Text(label))
-          : OutlinedButton(onPressed: onPressed, child: Text(label)),
-    );
-  }
-}
-
-class _TripPage extends StatefulWidget {
-  const _TripPage();
-
-  @override
-  State<_TripPage> createState() => _TripPageState();
-}
-
-class _TripPageState extends State<_TripPage> {
-  bool _paused = false;
-
-  Future<void> _finish() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Kết thúc chuyến đi?'),
-        content: const Text('Xác nhận kết thúc và mở biên lai.'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Hủy'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Xác nhận'),
-          ),
-        ],
+      child: OutlinedButton(
+        onPressed: () => context.push(path),
+        child: Text(label),
       ),
     );
-    if (!mounted || confirmed != true) return;
-    context.go(AppRouter.receipt);
   }
-
-  @override
-  Widget build(BuildContext context) => _PageShell(
-        title: 'Đang chạy chuyến',
-        children: <Widget>[
-          const Text('Tổng cước'),
-          const Text('30.000 đ'),
-          const Text('Thời gian chờ'),
-          const Text('00:00'),
-          FilledButton(
-            onPressed: () => setState(() => _paused = !_paused),
-            child: Text(_paused ? 'Tiếp tục' : 'Tạm dừng'),
-          ),
-          OutlinedButton(onPressed: _finish, child: const Text('Kết thúc')),
-        ],
-      );
 }
 
 class _HistoryPage extends StatelessWidget {
@@ -175,16 +135,22 @@ class _HistoryPage extends StatelessWidget {
 }
 
 class _ReceiptPage extends StatelessWidget {
-  const _ReceiptPage();
+  const _ReceiptPage({this.snapshot = const <String, String>{}});
+  final Map<String, String> snapshot;
 
   @override
-  Widget build(BuildContext context) => const _PageShell(
+  Widget build(BuildContext context) => _PageShell(
         title: 'Chi tiết chuyến đi',
         children: <Widget>[
-          Text('Biên lai chuyến đi'),
-          Text('Tổng cước'),
-          Text('30.000 đ (dữ liệu mẫu)'),
-          _NavButton('Về trang chủ', AppRouter.home),
+          const Text('Biên lai chuyến đi'),
+          const Text('DỮ LIỆU MẪU — chưa phải hóa đơn'),
+          const Text('Tổng cước'),
+          Text(snapshot['fare'] ?? '30.000 đ (dữ liệu mẫu)'),
+          Text('Quãng đường: ${snapshot['distance'] ?? 'chưa có'}'),
+          Text('Thời gian chuyến: ${snapshot['duration'] ?? '--:--'}'),
+          Text('Thời gian chờ: ${snapshot['waiting'] ?? '--:--'}'),
+          Text('Phụ phí BOT: ${snapshot['toll'] ?? '0 đ'}'),
+          const _NavButton('Về trang chủ', AppRouter.home),
         ],
       );
 }
