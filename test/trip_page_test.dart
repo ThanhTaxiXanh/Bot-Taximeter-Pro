@@ -21,12 +21,18 @@ Future<void> openTrip(WidgetTester tester) async {
   router.go(AppRouter.trip);
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 350));
-  await tester.pumpAndSettle();
+  final finishFinder = find.widgetWithText(NeonButton, 'Kết thúc');
+  // Không pumpAndSettle vì đồng hồ chuyến dùng Timer.periodic.
+  for (var attempt = 0; attempt < 20; attempt++) {
+    await tester.pump(const Duration(milliseconds: 20));
+    if (finishFinder.evaluate().isNotEmpty &&
+        tester.widget<NeonButton>(finishFinder).onPressed != null) {
+      break;
+    }
+  }
   expect(find.byType(TripPage), findsOneWidget);
   expect(TripController.instance.isActive, isTrue);
-  final finishButton = tester.widget<NeonButton>(
-    find.widgetWithText(NeonButton, 'Kết thúc'),
-  );
+  final finishButton = tester.widget<NeonButton>(finishFinder);
   expect(finishButton.onPressed, isNotNull,
       reason: 'Phải khởi tạo xong chuyến trước khi bấm Kết thúc');
 }
