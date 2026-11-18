@@ -32,6 +32,10 @@ abstract final class AppRouter {
           return RoutePage(
             initialStart: points?['start'],
             initialEnd: points?['end'],
+            initialStartLatitude: points?['startLat'],
+            initialStartLongitude: points?['startLon'],
+            initialEndLatitude: points?['endLat'],
+            initialEndLongitude: points?['endLon'],
           );
         },
       ),

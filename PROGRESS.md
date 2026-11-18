@@ -19,7 +19,7 @@ Cập nhật: 18/11/2026 (giờ Việt Nam). Repo `ThanhTaxiXanh/Bot-Taximeter-P
 - **Màn Đang chạy chuyến** hiển thị tổng cước/quãng đường/giây chờ từ controller, có cộng BOT chọn nhanh/nhập thủ công, xác nhận Kết thúc và truyền số liệu về màn Biên lai. Cước hiển thị là **tham khảo theo GPS, chưa phải đồng hồ taxi kiểm định**. Không có GPS hợp lệ thì không có quãng đường tính mới.
 - **Cài đặt → Biểu phí & Phí chờ:** chỉnh 5 đơn giá, tổng số phút miễn phí (0/3/5/10/15 hoặc số tùy chỉnh 0–1440), bật/tắt tự Waiting. Lưu trên thiết bị bằng `shared_preferences`, đọc khi bắt đầu một cuốc mới. Cấu hình của cuốc đang chạy nằm trong snapshot, không thay đổi giữa chuyến.
 - Các bài kiểm thử mới: `test/fare_calculator_test.dart`, `test/trip_controller_test.dart`; cập nhật `test/trip_page_test.dart` bỏ số liệu giả 72.000 đ/14:26. Giữ nguyên nhãn CI `Tổng cước`, `Thời gian chờ`, `Tạm dừng`, `Tiếp tục`, `Kết thúc`, `Biên lai chuyến đi`, `Xác nhận`, `Hủy`.
-- **Kiểm chứng Bước 10:** CI #17 (commit `234b8ba`) có cảnh báo analyzer và 2 widget test lỗi dù workflow hiển thị success. Đã sửa import dư và điều kiện kiểm tra widget ở các commit `391b81b`, `c5b4133`. CI #18 bị hủy khi thay test, CI #19 đang chạy trên `c5b4133`. **Chưa xác nhận Bước 10 đạt đủ 4/4.**
+- **Kiểm chứng Bước 10:** CI #17, #19 đều có widget test lỗi dù workflow success. CI #20 (commit `2b87ec1`) analyzer/APK/smoke đạt, nhưng widget test bị treo 10 phút. Đã tách widget test khỏi singleton/timer và loại bỏ fixture bất đồng bộ, đang chờ CI xác nhận. **Chưa đánh dấu Bước 10 hoàn tất trước khi test sạch.**
 
 ## Cây thư mục chính
 
@@ -84,7 +84,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 ## Kết quả CI
 
 - **CI #16** commit `960bdf5`: 4/4 đạt. https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44284562646
-- **Bước 10:** CI #17 (https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44292271300) có analyzer/test lỗi. Đã đẩy sửa lỗi lên `main` (code commit `c5b4133`); đang kiểm tra CI #19: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44306162121. Chưa đánh dấu xanh trước khi có log phân tích/test/APK/smoke đầy đủ. Xem Issue #1: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1
+- **Bước 10:** CI #20: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44311371146 (test chưa đạt). Sửa fixture sẽ được kiểm chứng cùng CI của Bước 11. Xem Issue #1: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1
 - SHA-1 debug: `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`.
 
 ## Cần thử trên điện thoại
@@ -98,4 +98,14 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Ưu tiên hiện tại:** Hoàn tất kiểm tra CI #19 Bước 10 (analyzer, unit/widget test, APK arm64, smoke Android 13), sửa đúng lỗi nếu có. Sau đó kiểm tra GPS/cước/chờ/BOT/SQLite/khôi phục trên Redmi Note 12 Pro. **Chỉ sau khi Bước 10 đạt mới triển khai Bước 11:** Nominatim được phép, OSRM, chỉ dẫn rẽ và cước ước tính tuyến.
+**Ưu tiên hiện tại:** Chạy CI mới xác nhận Bước 10 + 11; sửa mọi lỗi analyzer/test, xác minh APK và smoke Android 13. Sau đó thử GPS/cước/chờ/BOT/SQLite/khôi phục và dịch vụ tuyến thật trên Redmi Note 12 Pro. Không mở Bước 12 trước khi hoàn tất kiểm chứng.
+
+## Bước 11 — đang triển khai, chưa nghiệm thu
+
+- `place_search_service.dart`: tìm địa chỉ Nominatim có cấu hình qua HTTPS (mặc định tắt), chặn API Nominatim công cộng; chỉ gọi thủ công, cache 24h/64 câu, tối đa 5 kết quả, giới hạn theo tiến trình 1,2 giây/truy vấn.
+- `osrm_route_service.dart`: định tuyến qua máy chủ OSRM HTTPS do nhà vận hành cung cấp (mặc định tắt), chặn demo công cộng, tối đa 3 điểm/3 tuyến, GeoJSON, ETA, danh sách rẽ, cache 10 phút/24 truy vấn.
+- Màn Tìm kiếm hỗ trợ chọn tọa độ thật truyền sang Lập tuyến. Màn Lập tuyến dùng OSRM/polyline trên Google Maps, xem các bước rẽ, ước tính cước bằng `FareCalculator.estimate` với cấu hình trên máy.
+- Mọi kết quả mẫu được ghi nhãn rõ và vẫn dùng trong CI; không xin Google Maps API key cho widget test.
+- Chưa có dẫn đường giọng nói hay theo dõi tiến độ rẽ trực tiếp trên TripPage. BOT, kẹt xe và vị trí GPS không được suy đoán. Khoảng cách tuyến OSRM không thay thế GPS để tính cước đang chạy.
+- Cách cấp máy chủ hợp lệ, hạn chế chi phí và quy trình thử nghiệm tại `docs/ROUTING_SETUP.md`. Cần cấu hình Nominatim/OSRM tự quản hoặc được cấp phép trước khi tính tuyến thật trên điện thoại.
+- Bổ sung `test/route_services_test.dart` và `test/route_live_widgets_test.dart` dùng phản hồi giả lập, không cần mạng. **Chưa có kết quả CI mới cho toàn bộ Bước 11.**

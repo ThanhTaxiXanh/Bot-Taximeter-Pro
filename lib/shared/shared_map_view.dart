@@ -18,7 +18,7 @@ class SharedMapView extends StatefulWidget {
     super.key, required this.is3D, required this.isDark,
     required this.trafficEnabled, required this.followVehicle,
     this.showRoute = false, this.routeIndex = 0,
-    this.onFollowChanged,
+    this.routePoints, this.onFollowChanged,
     this.vehiclePosition,
     this.bearing = 0,
     this.zoom = 17,
@@ -31,6 +31,7 @@ class SharedMapView extends StatefulWidget {
   final bool followVehicle;
   final bool showRoute;
   final int routeIndex;
+  final List<LatLng>? routePoints;
   final ValueChanged<bool>? onFollowChanged;
   final LatLng? vehiclePosition;
   final double bearing;
@@ -132,7 +133,8 @@ class SharedMapViewState extends State<SharedMapView> {
   }
 
   CameraPosition get _camera => CameraPosition(
-    target: widget.vehiclePosition ?? SharedMapView.demoVehiclePosition,
+    target: widget.routePoints?.first ??
+        widget.vehiclePosition ?? SharedMapView.demoVehiclePosition,
     zoom: widget.zoom,
     bearing: widget.bearing,
     tilt: widget.is3D ? _savedTilt : 0,
@@ -148,7 +150,27 @@ class SharedMapViewState extends State<SharedMapView> {
       _programmaticMove = false;
     }
   }
-
+  Future<void> _fitRoute() async {
+    final points = widget.routePoints;
+    final controller = _controller;
+    if (controller == null || points == null || points.length < 2) return;
+    var south = points.first.latitude, north = points.first.latitude;
+    var west = points.first.longitude, east = points.first.longitude;
+    for (final p in points.skip(1)) {
+      if (p.latitude < south) south = p.latitude;
+      if (p.latitude > north) north = p.latitude;
+      if (p.longitude < west) west = p.longitude;
+      if (p.longitude > east) east = p.longitude;
+    }
+    if (south == north) { south -= .001; north += .001; }
+    if (west == east) { west -= .001; east += .001; }
+    try {
+      await controller.animateCamera(CameraUpdate.newLatLngBounds(
+        LatLngBounds(southwest: LatLng(south, west),
+            northeast: LatLng(north, east)), 36,
+      ));
+    } catch (_) { /* Bản đồ chưa đủ kích thước, giữ camera hiện tại. */ }
+  }
   /// Gọi từ nút định vị để bật lại chế độ Follow xe.
   void recenter() {
     widget.onFollowChanged?.call(true);
@@ -158,6 +180,10 @@ class SharedMapViewState extends State<SharedMapView> {
   @override
   void didUpdateWidget(covariant SharedMapView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.routePoints != widget.routePoints &&
+        widget.routePoints != null && widget.routePoints!.length >= 2) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _fitRoute());
+    }
     if (oldWidget.is3D != widget.is3D ||
         oldWidget.bearing != widget.bearing ||
         oldWidget.zoom != widget.zoom ||
@@ -167,9 +193,15 @@ class SharedMapViewState extends State<SharedMapView> {
       _recenter();
     }
   }
-
   Set<Polyline> get _polylines {
     if (!widget.showRoute) return const <Polyline>{};
+    final live = widget.routePoints;
+    if (live != null && live.length >= 2) {
+      return <Polyline>{
+        Polyline(polylineId: const PolylineId('osrm-route'),
+          points: live, color: const Color(0xFF006EFF), width: 7),
+      };
+    }
     return <Polyline>{
       for (var i = 0; i < _demoRoutes.length; i++)
         Polyline(
@@ -209,6 +241,14 @@ class SharedMapViewState extends State<SharedMapView> {
         zoomControlsEnabled: false,
         compassEnabled: true,
         markers: <Marker>{
+          if (widget.routePoints != null && widget.routePoints!.length >= 2)
+            Marker(markerId: const MarkerId('route-start'),
+              position: widget.routePoints!.first,
+              infoWindow: const InfoWindow(title: 'Điểm xuất phát')),
+          if (widget.routePoints != null && widget.routePoints!.length >= 2)
+            Marker(markerId: const MarkerId('route-end'),
+              position: widget.routePoints!.last,
+              infoWindow: const InfoWindow(title: 'Điểm đến')),
           if (widget.vehiclePosition != null)
             Marker(
               markerId: const MarkerId('gps-vehicle'),
@@ -225,7 +265,11 @@ class SharedMapViewState extends State<SharedMapView> {
         polylines: _polylines,
         onMapCreated: (controller) {
           _controller = controller;
-          if (widget.followVehicle) _recenter();
+          if (widget.routePoints != null && widget.routePoints!.length >= 2) {
+            WidgetsBinding.instance.addPostFrameCallback((_) => _fitRoute());
+          } else if (widget.followVehicle) {
+            _recenter();
+          }
         },
         onCameraMoveStarted: () {
           if (_programmaticMove) return;
@@ -235,9 +279,11 @@ class SharedMapViewState extends State<SharedMapView> {
       )),
       Positioned(left: 5, bottom: 4, child: IgnorePointer(
         child: Text(
-          widget.vehiclePosition == null
-              ? 'GPS CHƯA XÁC ĐỊNH · KHÔNG CÓ MARKER'
-              : 'VỊ TRÍ GPS · TUYẾN ĐƯỜNG VẪN LÀ MẪU',
+          widget.routePoints != null && widget.routePoints!.length >= 2
+              ? 'TUYẾN OSRM / © OPENSTREETMAP CONTRIBUTORS'
+              : widget.vehiclePosition == null
+                  ? 'GPS CHƯA XÁC ĐỊNH · KHÔNG CÓ MARKER'
+                  : 'VỊ TRÍ GPS · TUYẾN ĐƯỜNG VẪN LÀ MẪU',
           style: TextStyle(
             color: Colors.white, fontSize: 9,
             shadows: <Shadow>[

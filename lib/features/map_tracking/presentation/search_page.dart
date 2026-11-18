@@ -5,8 +5,11 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/app_shell.dart';
 import '../../../shared/glass_widgets.dart';
+import '../../../shared/shared_map_view.dart';
+import '../data/place_search_service.dart';
 import 'home_map_mock.dart';
 import 'mock_travel_data.dart';
+import 'search_live_panel.dart';
 
 /// Tìm kiếm POI bằng dữ liệu mẫu, chưa kết nối mạng.
 class SearchPage extends StatefulWidget {
@@ -49,6 +52,13 @@ class _SearchPageState extends State<SearchPage> {
   void _pick(bool start) => context.push(AppRouter.route, extra: <String, String>{
     start ? 'start' : 'end': mockPlaces[_selected].name,
   });
+
+  void _pickReal(LocatedPlace place, bool start) =>
+      context.push(AppRouter.route, extra: <String, String>{
+        start ? 'start' : 'end': place.name,
+        start ? 'startLat' : 'endLat': place.latitude.toString(),
+        start ? 'startLon' : 'endLon': place.longitude.toString(),
+      });
 
   Widget _searchBar() => TextField(
     controller: _controller,
@@ -210,6 +220,8 @@ class _SearchPageState extends State<SearchPage> {
           child: Text('Xem thêm (${_matches.length})'),
         ),
       ]),
+      const Text('Các kết quả bên dưới là dữ liệu mẫu.',
+          style: TextStyle(color: AppColors.muted, fontSize: 11)),
       if (_matches.isEmpty)
         const GlassCard(child: Text('Không có kết quả trong dữ liệu mẫu.')),
       for (final index in _matches) _placeItem(index),
@@ -249,6 +261,10 @@ class _SearchPageState extends State<SearchPage> {
     child: Column(crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         _searchBar(),
+        if (!SharedMapView.useMock) ...<Widget>[
+          const SizedBox(height: 7),
+          SearchLivePanel(query: _query, onPick: _pickReal),
+        ],
         const SizedBox(height: 7),
         _filters(),
         const SizedBox(height: 8),

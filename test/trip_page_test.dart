@@ -7,18 +7,16 @@ import 'package:bot_taximeter_pro/features/trip/trip_controller.dart';
 import 'package:bot_taximeter_pro/shared/glass_widgets.dart';
 
 Future<TripController> openTrip(WidgetTester tester) async {
+  // Fixture widget: unit test riêng đã kiểm chứng begin()/SQLite.
+  // Không khởi chạy async/ticker trong vùng FakeAsync của widget test.
   final controller = TripController(
     store: MemoryTripStore(), runTimer: false,
-  );
-  await tester.runAsync(() => controller.begin());
+  )..state = TripState.inTrip;
   tester.view.physicalSize = const Size(430, 940);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  addTearDown(() async {
-    await controller.complete();
-    controller.dispose();
-  });
+  addTearDown(controller.dispose);
   final router = AppRouter.createRouter(tripController: controller);
   addTearDown(router.dispose);
   await tester.pumpWidget(MaterialApp.router(

@@ -8,12 +8,19 @@ import '../../../shared/app_shell.dart';
 import '../../../shared/glass_widgets.dart';
 import '../../../shared/shared_map_view.dart';
 import '../data/gps_tracker.dart';
+import '../data/osrm_route_service.dart';
+import 'route_live_panel.dart';
+import 'route_demo_stats.dart';
 
 /// Lập tuyến bằng số liệu giả, chưa gọi OSRM hay tính cước thực.
 class RoutePage extends StatefulWidget {
-  const RoutePage({super.key, this.initialStart, this.initialEnd});
+  const RoutePage({super.key, this.initialStart, this.initialEnd,
+    this.initialStartLatitude, this.initialStartLongitude,
+    this.initialEndLatitude, this.initialEndLongitude});
   final String? initialStart;
   final String? initialEnd;
+  final String? initialStartLatitude, initialStartLongitude;
+  final String? initialEndLatitude, initialEndLongitude;
 
   @override
   State<RoutePage> createState() => _RoutePageState();
@@ -30,11 +37,6 @@ class _RoutePageState extends State<RoutePage> {
   int _selectedRoute = 0;
 
   static const routes = <String>['Nhanh nhất', 'Ít phí', 'Ít kẹt xe'];
-  static const etas = <String>['10 phút', '13 phút', '12 phút'];
-  static const distances = <String>['3,8 km', '4,1 km', '4,3 km'];
-  static const fares = <String>[
-    '≈ 72.000 đ', '≈ 78.000 đ', '≈ 80.000 đ',
-  ];
 
   @override
   void initState() {
@@ -168,24 +170,7 @@ class _RoutePageState extends State<RoutePage> {
     ]),
   );
 
-  Widget _stats() => GridView.count(
-    crossAxisCount: 2,
-    childAspectRatio: 1.0,
-    crossAxisSpacing: 7,
-    mainAxisSpacing: 7,
-    shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
-    children: <Widget>[
-      StatCard(label: 'ETA', value: etas[_selectedRoute],
-          icon: Icons.schedule),
-      StatCard(label: 'Quãng đường', value: distances[_selectedRoute],
-          icon: Icons.route),
-      StatCard(label: 'Cước ước tính', value: fares[_selectedRoute],
-          icon: Icons.payments_outlined),
-      const StatCard(label: 'Phí BOT', value: '0 đ',
-          icon: Icons.toll),
-    ],
-  );
+  Widget _stats() => RouteDemoStats(index: _selectedRoute);
 
   Widget _timeline() => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -244,9 +229,13 @@ class _RoutePageState extends State<RoutePage> {
     ]),
   );
 
+  bool get _liveEnabled => !SharedMapView.useMock &&
+      OsrmRouteService.instance.configured;
+
   Widget _actions() => Row(children: <Widget>[
     Expanded(flex: 3, child: NeonButton(
-      label: 'Bắt đầu dẫn đường', icon: Icons.navigation,
+      label: _liveEnabled ? 'Bắt đầu chuyến GPS' : 'Bắt đầu dẫn đường',
+      icon: Icons.navigation,
       onPressed: () => context.push(AppRouter.trip),
     )),
     const SizedBox(width: 7),
@@ -272,13 +261,34 @@ class _RoutePageState extends State<RoutePage> {
       children: <Widget>[
         _points(),
         const SizedBox(height: 8),
-        _options(),
-        const SizedBox(height: 8),
-        _map(),
-        const SizedBox(height: 8),
-        _stats(),
-        const SizedBox(height: 8),
-        _timeline(),
+        if (_liveEnabled)
+          RouteLivePanel(
+            startName: _start.text, endName: _end.text,
+            stopName: _stop.text, includeStop: _showStop,
+            is3D: _is3D, traffic: _traffic,
+            startLatitude: _start.text ==
+                (widget.initialStart ?? 'Vị trí hiện tại')
+                ? widget.initialStartLatitude : null,
+            startLongitude: _start.text ==
+                (widget.initialStart ?? 'Vị trí hiện tại')
+                ? widget.initialStartLongitude : null,
+            endLatitude: _end.text ==
+                (widget.initialEnd ?? 'KINGLANDS Gaming Center')
+                ? widget.initialEndLatitude : null,
+            endLongitude: _end.text ==
+                (widget.initialEnd ?? 'KINGLANDS Gaming Center')
+                ? widget.initialEndLongitude : null,
+            on3D: () => setState(() => _is3D = true),
+            on2D: () => setState(() => _is3D = false),
+            onTraffic: () => setState(() => _traffic = !_traffic),
+          )
+        else ...<Widget>[
+          const Text('Tuyến, ETA và cước bên dưới là DỮ LIỆU MẪU.',
+              style: TextStyle(color: AppColors.muted, fontSize: 11)),
+          _options(), const SizedBox(height: 8),
+          _map(), const SizedBox(height: 8),
+          _stats(), const SizedBox(height: 8), _timeline(),
+        ],
         const SizedBox(height: 12),
         _actions(),
       ],
