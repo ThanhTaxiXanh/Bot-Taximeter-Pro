@@ -71,7 +71,8 @@ class _HistoryPageState extends State<HistoryPage> {
     shrinkWrap: true,
     physics: const NeverScrollableScrollPhysics(),
     crossAxisCount: 2,
-    childAspectRatio: 1.25,
+    // Thẻ có 3 dòng và biến động: thêm chiều cao, tránh overflow CI #10.
+    childAspectRatio: 1.0,
     crossAxisSpacing: 9,
     mainAxisSpacing: 9,
     children: <Widget>[
