@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bot_taximeter_pro/core/router/app_router.dart';
 import 'package:bot_taximeter_pro/features/trip/presentation/trip_page.dart';
 import 'package:bot_taximeter_pro/features/trip/trip_controller.dart';
+import 'package:bot_taximeter_pro/shared/glass_widgets.dart';
 
 Future<void> openTrip(WidgetTester tester) async {
   tester.view.physicalSize = const Size(430, 940);
@@ -19,23 +21,41 @@ Future<void> openTrip(WidgetTester tester) async {
   router.go(AppRouter.trip);
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 350));
+  await tester.pumpAndSettle();
   expect(find.byType(TripPage), findsOneWidget);
+  expect(TripController.instance.isActive, isTrue);
+  final finishButton = tester.widget<NeonButton>(
+    find.widgetWithText(NeonButton, 'Kết thúc'),
+  );
+  expect(finishButton.onPressed, isNotNull,
+      reason: 'Phải khởi tạo xong chuyến trước khi bấm Kết thúc');
 }
 
+/// Giới hạn tìm đồng hồ trong đúng thẻ, tránh trùng 00:00 giữa hai thẻ.
+Finder statValue(String label, String value) => find.descendant(
+  of: find.ancestor(
+    of: find.text(label), matching: find.byType(StatCard),
+  ),
+  matching: find.text(value),
+);
+
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues(<String, Object>{}));
+
   testWidgets('Tạm dừng và tiếp tục dùng đồng hồ controller', (tester) async {
     await openTrip(tester);
     expect(find.text('Tổng cước'), findsOneWidget);
     expect(find.text('Thời gian chờ'), findsOneWidget);
-    expect(find.text('00:00'), findsOneWidget);
+    expect(statValue('Thời gian chuyến', '00:00'), findsOneWidget);
+    expect(statValue('Thời gian chờ', '00:00'), findsOneWidget);
     await tester.pump(const Duration(seconds: 1));
-    expect(find.text('00:01'), findsOneWidget);
+    expect(statValue('Thời gian chuyến', '00:01'), findsOneWidget);
 
     await tester.tap(find.text('Tạm dừng'));
     await tester.pump();
     expect(find.text('Tiếp tục'), findsOneWidget);
     await tester.pump(const Duration(seconds: 1));
-    expect(find.text('00:01'), findsOneWidget);
+    expect(statValue('Thời gian chờ', '00:01'), findsOneWidget);
     await tester.tap(find.text('Tiếp tục'));
     await tester.pump();
     expect(find.text('Tạm dừng'), findsOneWidget);
