@@ -7,7 +7,7 @@ Cập nhật: 18/11/2026 (giờ Việt Nam). Repository: `ThanhTaxiXanh/Bot-Taxi
 - **Bước 1:** khởi tạo Flutter `bot_taximeter_pro`, Riverpod, GoRouter 7 route, `kCI`, 5 file CI/CD từ Phụ lục A.
 - **Bước 2:** theme navy/cyan, kính mờ `BackdropFilter`, Be Vietnam Pro qua `google_fonts`, `AppShell`, `GlassCard`, `NeonButton`, `MapControlButtons`, `StatCard`, `RoutePreviewPainter`.
 - **Bước 3:** Màn Home mock với bản đồ `CustomPainter`, chip trạng thái, số tốc độ và biển giới hạn minh họa, điều khiển 2D/3D/giao thông, nút điều hướng. Có `test/home_page_test.dart`.
-- **Sửa lỗi CI #5:** widget test `Biển tốc độ mẫu cho phép chọn số minh họa` tìm `80` trước khi hộp chọn đóng. Đã sửa đúng `test/home_page_test.dart` để pump nhiều frame; commit `5fb52f2`, **chưa có CI xác nhận**.
+- **Lỗi CI #5 và #6 (Bước 3):** bài test biển tốc độ không tìm thấy `80`; tăng số frame chờ ở commit `5fb52f2` chưa khắc phục (CI #6 vẫn lỗi). Đã sửa chính `lib/features/map_tracking/presentation/home_page.dart`: cập nhật `setState` khi nhấn ActionChip, trước khi đóng bottom sheet. Cần CI mới xác nhận.
 - **Bước 4:** Màn 2 `SearchPage`: ô tìm kiếm, nút xóa/micro mô phỏng, sáu chip danh mục, bản đồ nhỏ vẽ nội bộ, chọn địa điểm, `Chọn điểm đi` và `Chọn điểm đến`, danh sách `Kết quả tìm kiếm`, `Tìm kiếm gần đây` và xóa các mục. Dữ liệu POI/địa chỉ/khoảng cách là minh họa.
 - **Bước 4:** Màn 3 `RoutePage`: chọn điểm đi/dừng/đến, thêm và bỏ điểm dừng, đảo chiều, ba phương án `Nhanh nhất`/`Ít phí`/`Ít kẹt xe`, bản đồ polyline mẫu với tuyến được chọn và 2 tuyến thay thế, 4 số liệu ETA/quãng đường/cước/BOT, tổng quan lộ trình, nút `Bắt đầu dẫn đường` và `Lưu tuyến` (thông báo chưa có lưu thật).
 - Liên thông lựa chọn địa điểm từ Màn 2 đến Màn 3 bằng `GoRouterState.extra` (map String/String). Điều hướng `Bắt đầu dẫn đường` mở Màn 4 hiện tại.
@@ -81,8 +81,8 @@ Dart SDK `>=3.12.0 <4.0.0`. CI hiện sử dụng Flutter **3.50.0** stable theo
 ## Kết quả CI gần nhất
 
 - Báo cáo: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1
-- **CI #5**, commit `3fde08e`: `flutter analyze` đạt, `flutter test` lỗi 1 bài test tốc độ, build APK debug đạt, smoke test Android 13 đạt.
-- Nguyên nhân test: `expect(find.text('80'))` chạy sau thời gian bơm frame chưa đủ cho bottom sheet đóng và widget cập nhật. Đã bổ sung bơm frame trong `test/home_page_test.dart`, commit `5fb52f2`; chưa có báo cáo mới xác nhận.
+- **CI #6**, commit `5fb52f2`: `flutter analyze` đạt, `flutter test` vẫn lỗi 1 bài test tốc độ (không tìm thấy `80`), build APK debug đạt, smoke test Android 13 đạt.
+- Đã xác nhận chỉ kéo dài thời gian pump không khắc phục, nên đổi logic chọn tốc độ mẫu để cập nhật trực tiếp ngay khi bấm chip. Chưa có báo cáo CI xác nhận bản sửa mới.
 - **Chưa có kết quả CI cho commit Bước 4**; không xác nhận các test mới đạt cho tới khi có báo cáo đúng commit.
 - SHA-1 khóa debug: `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`.
 

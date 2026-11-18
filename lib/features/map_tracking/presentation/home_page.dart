@@ -29,7 +29,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _chooseSpeedLimit() async {
-    final result = await showModalBottomSheet<int>(
+    await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
@@ -52,7 +52,11 @@ class _HomePageState extends State<HomePage> {
                   for (final value in <int>[40, 50, 60, 70, 80, 90, 100, 120])
                     ActionChip(
                       label: Text('$value km/h'),
-                      onPressed: () => Navigator.of(sheetContext).pop(value),
+                      onPressed: () {
+                        // Đổi số ngay khi chạm, không phụ thuộc animation đóng sheet.
+                        setState(() => _limitKmh = value);
+                        Navigator.of(sheetContext).pop();
+                      },
                     ),
                 ],
               ),
@@ -61,8 +65,6 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
-    if (!mounted || result == null) return;
-    setState(() => _limitKmh = result);
   }
 
   void _showMenu() {
