@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/app_config.dart';
+import 'features/trip/trip_controller.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_colors.dart';
 
@@ -25,6 +26,11 @@ class _BotTaximeterAppState extends State<BotTaximeterApp> {
   void initState() {
     super.initState();
     _router = AppRouter.createRouter();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Trên máy thật, phát hiện snapshot rồi mở màn hỏi khôi phục.
+      final found = await TripController.instance.loadPending();
+      if (mounted && found) _router.go(AppRouter.trip);
+    });
   }
 
   @override

@@ -1,111 +1,101 @@
 # BỘT TAXIMETER PRO — PROGRESS
 
-Cập nhật: 18/11/2026 (giờ Việt Nam). Repository `ThanhTaxiXanh/Bot-Taximeter-Pro`, nhánh `main`.
+Cập nhật: 18/11/2026 (giờ Việt Nam). Repo `ThanhTaxiXanh/Bot-Taximeter-Pro`, nhánh `main`.
 
 ## Đã làm
 
-- **Bước 1:** Khởi tạo Flutter/Riverpod/GoRouter 7 route; Android tạo trong CI; bộ CI chuẩn Phụ lục A.
-- **Bước 2:** Theme navy/cyan, kính mờ, `AppShell`, nút neon, ô thống kê và bộ nút bản đồ.
-- **Bước 3:** Home mock, chip, tốc độ/biển mẫu, tìm kiếm, tuyến, doanh thu, cài đặt.
-- **Bước 4:** Tìm kiếm và lập tuyến mẫu, POI/offline 3 phương án và các màn chuyển tiếp.
-- **Bước 5:** Đang chạy chuyến mock, `Timer`, tạm dừng, phụ phí, kết thúc, SOS minh họa.
-- **Bước 6:** Lịch sử/doanh thu mock, `fl_chart`, ba bộ lọc và danh sách cuốc.
-- **Bước 7:** Biên lai mẫu + QR chỉ chứa chuỗi DEMO, Cài đặt lưu bằng `shared_preferences`.
-- **Bước 8:** `SharedMapView` với Google Maps SDK, 2D/3D, style dark/light, traffic layer, marker xe tự vẽ, 3 polyline mẫu và Canvas fallback trong CI.
-- **Bước 9: GPS thật và xử lý dữ liệu.** Thêm `GpsTracker` singleton ChangeNotifier và `GpsFilter` Dart thuần với Haversine, ngưỡng accuracy ≤25m, bước nhảy ≤200km/h, chỉ cộng mét ≥5m và tốc độ làm mượt ≥3km/h. Đo tốc độ thật khi được cấp quyền; hiện accuracy tốt/yếu và cập nhật marker xe trong `SharedMapView`. Không hiển thị marker giả nếu không có fix GPS hợp lệ.
-- Trên **Home**, chạm chip GPS để xem mô tả quyền và yêu cầu vị trí khi sử dụng. Khi có fix hợp lệ, cập nhật tọa độ, heading, tốc độ; tên đường có thể tra theo thao tác chạm. **RoutePage** hiển thị vị trí GPS hiện có; các polyline và ETA vẫn là dữ liệu mẫu.
-- Trên **Màn Đang chạy chuyến**, sau khi tài xế vào màn sẽ hỏi quyền vị trí, sau đó quyền thông báo Android 13+; dùng `AndroidSettings.foregroundNotificationConfig` với thông báo `Đang chạy chuyến` để theo dõi trong khi app chuyển ra nền. `wakelock_plus` giữ sáng màn hình trong chuyến và tắt khi rời màn. Nút `Cài đặt pin Xiaomi / Redmi` hướng dẫn tự thay đổi tối ưu pin, không tự cấp quyền.
-- Thêm `TripMapPanel` để tách phần bản đồ khỏi `TripPage` và giữ giới hạn 300 dòng/file. Màn Trip hiển thị quãng đường Haversine (khi có fix thật), tốc độ thực; khi tạm dừng không cộng quãng đường. Biển giới hạn 60, chỉ dẫn rẽ, tổng cước và phụ phí vẫn là **mẫu**.
-- `GeocodingProvider` interface và `NominatimGeocodingProvider` hỗ trợ reverse geocode qua **máy chủ HTTPS riêng/được cấp phép**, chỉ khi người dùng chạm yêu cầu. Cache ô xấp xỉ 50m, tối thiểu 1,2 giây giữa request, mỗi lần một request, timeout và LRU đơn giản 256 ô. Không gửi request theo lưới hoặc mỗi giây; mặc định không có URL nên không truyền GPS ra mạng cho geocoder. Chính sách OSM yêu cầu không sử dụng dịch vụ Nominatim công cộng như một API định vị xe hàng loạt, vì vậy mã chặn host công cộng.
-- Unit tests mới: `gps_filter_test.dart` (Haversine, accuracy, tốc độ, jump, pause và làm mượt); `road_name_provider_test.dart` (no-network mặc định, cache/rate limit bằng fake); `gps_tracker_test.dart` (CI không dùng plugin).
-- **CI #13 cho Bước 8 `8634f59`: flutter analyze ✅, flutter test ✅, build APK debug ✅, smoke test Android 13 ✅.** Bước 9 chưa có CI cho commit mới, không kết luận xanh trước báo cáo.
-- Không đổi file CI, keystore, smoke test hoặc dữ liệu ảnh. Package giữ `vn.bottaximeter.bot_taximeter_pro`.
+- **Bước 1–2:** Flutter + Riverpod + GoRouter, bộ CI chuẩn từ Phụ lục A, giao diện navy/cyan và widget dùng chung.
+- **Bước 3–4:** Home, Tìm kiếm và Lập tuyến bằng dữ liệu mẫu, các màn cùng điều hướng qua GoRouter.
+- **Bước 5–6:** Màn chạy chuyến mẫu, lịch sử/doanh thu mẫu, `fl_chart` và bộ lọc.
+- **Bước 7:** Màn biên lai mẫu, QR chỉ chứa chuỗi DEMO, Cài đặt lưu bằng `shared_preferences`.
+- **Bước 8:** `SharedMapView` dùng Google Maps Android, 2D/3D, traffic, Follow; CI dùng Canvas.
+- **Bước 9:** `GpsTracker`, Haversine, lọc nhiễu, foreground notification/wakelock khi đã được cấp quyền, tên đường qua geocoder tùy chọn. **CI #16 commit `960bdf5`: flutter analyze ✅, flutter test ✅, build APK arm64 ✅, smoke test Android 13 ✅.**
+- **Bước 10:** Thêm `FareConfig`/`FareCalculator` thuần Dart, các bậc theo Master Prompt: mở cửa 30.000 đ gồm 1,5 km; 1,5–30 km = 13.000 đ/km; 30–50 km = 11.500 đ/km; trên 50 km = 10.000 đ/km; chờ 30.000 đ/giờ sau 5 phút miễn phí (tùy chỉnh trong Cài đặt). BOT cộng sau bước làm tròn.
+- `roundVnd`: phần dư **> 500** mới làm tròn lên; phần dư đúng **500** làm tròn xuống. Có unit test cho 0,1,499,500,501,999 và các mốc km/phí chờ/BOT.
+- **TripController** là nơi duy nhất chuyển trạng thái: enum `idle → pickingUp → inTrip ⇄ waiting → completed`; trạng thái `pickingUp` dành cho tương lai. `Tạm dừng`/ `Tiếp tục` đi qua controller. Tùy chọn tự chuyển vào `waiting` sau 10 giây ở tốc độ GPS dưới 3 km/h mặc định **tắt**; không kích hoạt tự động khi chưa có GPS. Tạm dừng thủ công không bị tự động bật lại theo tốc độ.
+- Thời gian chờ tích lũy theo số giây khi ở `waiting`, quãng đường từ chênh lệch Haversine đã lọc của `GpsTracker`. Không tính thêm khoảng thời gian app đã đóng hoặc không có tick, không nối khoảng cách giữa điểm cuối trước khôi phục và vị trí GPS đầu tiên sau khôi phục.
+- **SQLite:** `sqflite` tạo bảng `trip_snapshots` trong `bot_taximeter.db`; lưu một snapshot đang chạy qua JSON mỗi **3 giây** và tại các thay đổi trạng thái/BOT. Các thao tác ghi chạy tuần tự; khi kết thúc thì đợi ghi xong rồi xóa snapshot. CI/unit test dùng `MemoryTripStore`, không gọi SQLite native.
+- **Khôi phục:** `main.dart` kiểm tra snapshot khi ứng dụng khởi động, mở màn Trip để hỏi **“Khôi phục chuyến đang chạy?”**. Tài xế chọn Khôi phục hoặc Bỏ chuyến cũ. Đồng hồ không tự cộng thêm quãng thời gian khi app đã đóng.
+- **Màn Đang chạy chuyến** hiển thị tổng cước/quãng đường/giây chờ từ controller, có cộng BOT chọn nhanh/nhập thủ công, xác nhận Kết thúc và truyền số liệu về màn Biên lai. Cước hiển thị là **tham khảo theo GPS, chưa phải đồng hồ taxi kiểm định**. Không có GPS hợp lệ thì không có quãng đường tính mới.
+- **Cài đặt → Biểu phí & Phí chờ:** chỉnh 5 đơn giá, tổng số phút miễn phí (0/3/5/10/15 hoặc số tùy chỉnh 0–1440), bật/tắt tự Waiting. Lưu trên thiết bị bằng `shared_preferences`, đọc khi bắt đầu một cuốc mới. Cấu hình của cuốc đang chạy nằm trong snapshot, không thay đổi giữa chuyến.
+- Các bài kiểm thử mới: `test/fare_calculator_test.dart`, `test/trip_controller_test.dart`; cập nhật `test/trip_page_test.dart` bỏ số liệu giả 72.000 đ/14:26. Giữ nguyên nhãn CI `Tổng cước`, `Thời gian chờ`, `Tạm dừng`, `Tiếp tục`, `Kết thúc`, `Biên lai chuyến đi`, `Xác nhận`, `Hủy`.
+- **Chưa có kết quả CI cho commit Bước 10**. Không xác nhận bước mới build thành công nếu chưa có báo cáo đúng commit.
 
-## Cây thư mục
+## Cây thư mục chính
 
 ```text
 .
 ├── .github/workflows/ci.yml
-├── .gitignore, analysis_options.yaml, README.md, PROGRESS.md
-├── assets/images/logo.png
-├── assets/map_styles/{dark.json,light.json}
-├── ci/debug.keystore
-├── ci/scripts/{prepare_android.sh,patch_android.py,make_report.py}
-├── docs/
-│   ├── GPS_SETUP.md
-│   ├── GOOGLE_MAPS_SETUP.md
-│   └── design/ (7 ảnh thiết kế + README)
-├── integration_test/app_smoke_test.dart
+├── ci/{debug.keystore,scripts/*}       # không chỉnh sửa bộ CI
+├── integration_test/app_smoke_test.dart # giữ nguyên
+├── assets/{images/logo.png,map_styles/}
+├── docs/{design/,GPS_SETUP.md,GOOGLE_MAPS_SETUP.md}
 ├── lib/
 │   ├── core/{app_config.dart,router/app_router.dart,theme/app_colors.dart}
 │   ├── features/
+│   │   ├── fare_meter/fare_calculator.dart         # MỚI Bước 10
+│   │   ├── trip/trip_controller.dart               # MỚI Bước 10
+│   │   ├── trip/presentation/{trip_page.dart,trip_map_panel.dart}
+│   │   ├── map_tracking/{data/,presentation/}
 │   │   ├── history/presentation/
-│   │   ├── map_tracking/
-│   │   │   ├── data/{gps_filter.dart,gps_tracker.dart,road_name_provider.dart}
-│   │   │   └── presentation/{gps_permission_prompt.dart,
-│   │   │       home_map_mock.dart,home_page.dart,home_widgets.dart,
-│   │   │       mock_travel_data.dart,route_page.dart,search_page.dart}
 │   │   ├── receipt/presentation/
-│   │   ├── settings/presentation/
-│   │   └── trip/presentation/{trip_map_panel.dart,trip_page.dart}
-│   ├── shared/{app_shell.dart,glass_widgets.dart,
-│   │           route_preview_painter.dart,shared_map_view.dart}
+│   │   └── settings/presentation/settings_page.dart
+│   ├── shared/
 │   └── main.dart
+├── test/
+│   ├── fare_calculator_test.dart                    # MỚI Bước 10
+│   ├── trip_controller_test.dart                    # MỚI Bước 10
+│   ├── trip_page_test.dart                          # cập nhật Bước 10
+│   └── ...                                         # test cũ
 ├── pubspec.yaml
-└── test/ (các test Bước 1–8 + gps_filter_test.dart,
-           road_name_provider_test.dart, gps_tracker_test.dart)
+└── PROGRESS.md
 ```
-
-`android/` được `flutter create` tự tạo trong CI, không commit.
 
 ## Dependencies và phiên bản
 
-| Package | Version |
+| Package | Ghim |
 |---|---|
-| `flutter_riverpod` | 3.5.0 |
-| `go_router` | 18.1.4 |
-| `google_fonts` | 8.1.0 |
-| `fl_chart` | 1.3.1 |
-| `qr_flutter` | 4.1.0 |
-| `shared_preferences` | 2.5.6 |
-| `google_maps_flutter` | 2.19.0 |
-| `geolocator` | **14.1.2** (Bước 9) |
-| `permission_handler` | **12.0.3** (Bước 9, tương thích compileSdk ≥35 thay vì v13 đòi SDK37) |
-| `wakelock_plus` | **1.8.0** (Bước 9; tránh xung đột `dbus` với geolocator Linux) |
-| `flutter_lints` | 6.0.0 (dev) |
+| `flutter_riverpod` | `3.5.0` |
+| `go_router` | `18.1.4` |
+| `google_fonts` | `8.1.0` |
+| `fl_chart` | `1.3.1` |
+| `qr_flutter` | `4.1.0` |
+| `shared_preferences` | `2.5.6` |
+| `google_maps_flutter` | `2.19.0` |
+| `geolocator` | `14.1.2` |
+| `permission_handler` | `12.0.3` |
+| `wakelock_plus` | `1.8.0` |
+| **`sqflite`** | **`2.4.6`** (Bước 10) |
+| `flutter_lints` | `6.0.0` |
 
-Dart SDK >=3.12.0 <4.0.0. Flutter trong CI #13: 3.50.0 stable. Nên đặt repo variable `FLUTTER_VERSION=3.50.0`.
+Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
-## Quyết định và giới hạn kỹ thuật
+## Quyết định kỹ thuật và rủi ro
 
-- Bước 9 dùng nguồn vị trí **trực tiếp từ thiết bị khi tài xế cho phép**; không lấy vị trí từ cuộc trò chuyện hay một địa chỉ gán mặc định.
-- `GpsTracker.useMock` bật khi `CI=true` hoặc `FLUTTER_TEST=true`, không gọi `Geolocator`, `permission_handler`, `WakelockPlus` hoặc geocoding; UI mock vẫn hiện chữ `GPS tốt` để giữ smoke test cũ.
-- `GpsFilter` thuần Dart kiểm soát nhiễu, không bảo đảm độ chính xác 100%. Trước khi tính cước thật phải có FareEngine, kiểm chứng thực địa, trạng thái chuyến và snapshot định kỳ (Bước 10).
-- `GpsTracker.start(trip:true)` chỉ được gọi sau khi tài xế đồng ý; khởi chạy stream Android Foreground NotificationConfig. `stop` hủy stream/wakelock, xóa fix và tên đường để không dùng vị trí cũ.
-- AndroidManifest đã có quyền `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `FOREGROUND_SERVICE_LOCATION`, `POST_NOTIFICATIONS`, `WAKE_LOCK` từ `patch_android.py`. Không tự yêu cầu `ACCESS_BACKGROUND_LOCATION`; Android yêu cầu service foreground được bắt đầu khi app đang hiển thị và quyền location khi dùng.
-- Không tự yêu cầu `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`: cung cấp hướng dẫn và mở app settings sau khi người dùng bấm. Không có bảo đảm Android/MIUI không hủy app trong nền.
-- **Nominatim policy:** dịch vụ công cộng có giới hạn 1 req/giây cho toàn bộ ứng dụng, cấm reverse theo lưới và cảnh báo đối với app theo dõi xe. Vì vậy chỉ hỗ trợ máy chủ đã được phê duyệt qua `--dart-define=GEOCODING_BASE_URL=...`, mặc định tắt; không gọi public host. Không tự tải mỗi khi GPS thay đổi; chỉ tra theo chạm tên đường. Xem `docs/GPS_SETUP.md`. Tên đường nguồn OpenStreetMap cần ghi công.
-- Cước và biển tốc độ vẫn là mẫu, không sử dụng để thu tiền hoặc chỉ dẫn lái xe. Chưa có OSRM, FareCalculator, speed rule engine.
-- GPS foreground service chỉ sống khi Dart app duy trì stream; chưa có persist/snapshot chuyến, tiến trình có thể bị Android giết. Bước 10 và 14 sẽ cải thiện độ bền/MIUI.
+- Không dùng Google Directions/Places/Geocoding API; khoảng cách tính cước lấy từ `GpsTracker`, không phải từ Google Maps.
+- Snapshot là dữ liệu phục hồi chuyến đang chạy, **không phải bảng `trips` lịch sử hoàn chỉnh**; lưu lịch sử và thống kê thật sẽ làm ở Bước 13.
+- Nếu không có GPS/tín hiệu xấu hoặc điện thoại bị hệ thống dừng, quãng đường có thể bị thiếu. UI ghi rõ chỉ là **cước tham khảo**, không có giá trị pháp lý/kiểm định, không thay thế thiết bị thu cước được cấp phép.
+- Khi app bị đóng, không tự cộng khoảng cách hoặc thời gian chờ chưa ghi nhận, để tránh cộng phí sai. Mốc phục hồi thực tế bị giới hạn bởi snapshot gần nhất, tối đa khoảng 3 giây nếu timer/SQLite vẫn hoạt động bình thường.
+- `sqflite` chỉ mở database trên Android bình thường. CI mock dùng memory; vì vậy phải thử phục hồi SQLite thực tế trên thiết bị.
+- Widget test có thể chạy không có GPS/GoogleMap/API; CI vẫn dùng `kCI`. Giữ nguyên workflow, khóa ký debug và smoke test chuẩn.
+- Repo public có debug keystore cố định, cần cân nhắc chuyển private; API key vẫn chỉ lưu GitHub Secret.
+- Google Maps thật/GPS nền có thể bị giới hạn bởi MIUI; xác minh thực địa và quyền thông báo foreground.
 
-## CI và APK
+## Kết quả CI
 
-- Báo cáo: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1
-- **CI #13** (commit `8634f59`), 4/4 hạng mục đều đạt: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44274743679
-- **CI #14**, commit `ba9383e`: thất bại ở `flutter create / pub get` vì `wakelock_plus 1.8.2` yêu cầu `dbus ^0.8.0` trong khi `geolocator_linux` yêu cầu `dbus ^0.7.3`. Chưa chạy analyzer/test/APK. Đã ghim lại `wakelock_plus 1.8.0` theo gợi ý resolver; chờ CI commit sửa lỗi xác nhận.
-- **CI #15**, commit `e4c3214`: giải dependency/chuẩn bị Android thành công nhưng `flutter analyze`, widget test, APK và Android smoke đều lỗi biên dịch bởi 2 chỗ: dấu phẩy sau cụm tham số `{bool trip = false}` trong `gps_permission_prompt.dart` và `const Positioned` chứa `widget.vehiclePosition` tại `shared_map_view.dart:236`. Đã chỉnh đúng hai file nguồn; cần CI commit tiếp theo xác nhận.
-- SHA-1 debug CI: `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`.
-- Repo public có debug keystore cố định; nên chuyển private. Google Maps key nằm trong GitHub Secret `MAPS_API_KEY`, không commit vào repo.
+- **CI #16** commit `960bdf5`: 4/4 đạt. https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44284562646
+- **Bước 10:** chưa có báo cáo mới. Xem https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1
+- SHA-1 debug: `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`.
 
 ## Cần thử trên điện thoại
 
-- Redmi Note 12 Pro: bật Vị trí, trên Home chạm chip GPS, chọn quyền `Trong khi sử dụng`; kiểm tra trạng thái, marker xe thật, tốc độ từ GPS, tự về vị trí khi Follow xe.
-- Di chuyển thử nơi an toàn để so vị trí/tốc độ, đi chậm dưới 3km/h, tín hiệu yếu, tắt GPS giữa chuyến, trạng thái khi quyền từ chối. Không thao tác điện thoại khi đang lái.
-- Vào Màn Chuyến, đồng ý quyền thông báo, kiểm tra thông báo `Đang chạy chuyến`, thử tắt màn hình/đổi app, sau đó quay lại xem số mét; chạm `Cài đặt pin Xiaomi / Redmi` nếu cần.
-- Tạm dừng, kiểm tra quãng đường không tăng; kết thúc, xác nhận thông báo foreground/wakelock dừng.
-- Tên đường: mặc định không truy vấn; muốn thử cần endpoint Nominatim riêng hợp lệ và build với Dart define.
-- Test hồi quy tất cả 7 màn, đặc biệt UI CI và smoke test Android 13.
+- Redmi Note 12 Pro: Cài đặt → Biểu phí & Phí chờ: sửa phút miễn phí/đơn giá, nhấn Lưu, mở lại xem có giữ số.
+- Bật GPS và thử cuốc ở nơi an toàn, không thao tác khi đang lái. Quan sát quãng đường/tốc độ thực, số tiền theo mốc 1,5 km, các bậc km, phí chờ và BOT.
+- Tạm dừng để kiểm tra thời gian chờ tăng; tiếp tục để xem trở lại cước theo km; nếu bật auto Waiting, thử tốc độ dưới 3 km/h trong 10 giây và kiểm tra chuyển trạng thái.
+- Trong cuốc, chuyển ứng dụng ra nền/tắt màn hình, sau đó ép đóng và mở lại: phải có hộp thoại **“Khôi phục chuyến đang chạy?”**. Kiểm tra số liệu không nhảy thêm giờ/kilômét lúc ứng dụng đóng. Thử chọn Bỏ chuyến cũ.
+- Kết thúc chuyến kiểm tra snapshot được xóa, mở lại app không hỏi khôi phục; biên lai có tổng tiền, thời gian, quãng đường, chờ và BOT.
+- Do GPS điện thoại có sai số, không sử dụng cước hiển thị để thu tiền khi chưa kiểm chứng.
 
 ## Việc tiếp theo
 
-**Bước tiếp theo: 10 — Fare engine, state machine chuyến đi, unit test, snapshot 3 giây và khôi phục chuyến sau khi app bị đóng.**
+**Bước tiếp theo: 11 — Tìm kiếm địa chỉ thật qua Nominatim được phép, định tuyến qua OSRM, chỉ dẫn rẽ và cước ước tính tuyến.**
