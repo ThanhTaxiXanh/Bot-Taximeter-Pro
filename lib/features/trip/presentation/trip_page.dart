@@ -7,7 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../shared/app_shell.dart';
 import '../../../shared/glass_widgets.dart';
 import '../../map_tracking/presentation/home_widgets.dart';
-import '../../map_tracking/presentation/mock_travel_data.dart';
+import '../../../shared/shared_map_view.dart';
 
 /// Màn 4 giả lập: không lấy GPS, không tính cước thật, không gửi SOS.
 class TripPage extends StatefulWidget {
@@ -17,6 +17,7 @@ class TripPage extends StatefulWidget {
 }
 
 class _TripPageState extends State<TripPage> {
+  final _mapKey = GlobalKey<SharedMapViewState>();
   static const int _initialSeconds = 14 * 60 + 26;
   late final Timer _ticker;
   int _trip = _initialSeconds;
@@ -165,14 +166,13 @@ class _TripPageState extends State<TripPage> {
   Widget _map() => ClipRRect(
     borderRadius: BorderRadius.circular(18),
     child: SizedBox(height: 218, child: Stack(children: <Widget>[
-      const Positioned.fill(child: MockRouteMap(selectedRoute: 0)),
-      const Align(
-        alignment: Alignment(0, .55),
-        child: CircleAvatar(
-          radius: 23, backgroundColor: Color(0xFF1265DC),
-          child: Icon(Icons.navigation, color: AppColors.white),
-        ),
-      ),
+      Positioned.fill(child: SharedMapView(
+        key: _mapKey,
+        is3D: _is3D, isDark: true,
+        trafficEnabled: _traffic, followVehicle: _follow,
+        showRoute: true, routeIndex: 0,
+        onFollowChanged: (value) => setState(() => _follow = value),
+      )),
       Positioned(top: 6, left: 6, child: HomeSpeedPanel(
         limitKmh: 60,
         onLimitTap: () => _notice('Biển hạn chế chỉ là dữ liệu mẫu'),
@@ -186,7 +186,7 @@ class _TripPageState extends State<TripPage> {
             on3D: () => setState(() => _is3D = true),
             on2D: () => setState(() => _is3D = false),
             onTraffic: () => setState(() => _traffic = !_traffic),
-            onRecenter: () => setState(() => _follow = true),
+            onRecenter: () => _mapKey.currentState?.recenter(),
           ),
         ),
       )),

@@ -1,0 +1,7 @@
+[
+  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#b6d7e6"}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#ffffff"}]},
+  {"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#e4eaf0"}]},
+  {"featureType":"poi","elementType":"geometry","stylers":[{"color":"#d5e7e3"}]},
+  {"elementType":"labels.text.fill","stylers":[{"color":"#344b5d"}]}
+]

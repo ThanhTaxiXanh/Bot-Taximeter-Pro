@@ -5,7 +5,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/app_shell.dart';
 import '../../../shared/glass_widgets.dart';
-import 'home_map_mock.dart';
+import '../../../shared/shared_map_view.dart';
 import 'home_widgets.dart';
 
 /// Màn Home mock, không dùng GPS, Google Maps hay gọi mạng.
@@ -16,6 +16,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final _mapKey = GlobalKey<SharedMapViewState>();
   bool _is3D = true;
   bool _isDark = false;
   bool _traffic = false;
@@ -130,8 +131,12 @@ class _HomePageState extends State<HomePage> {
           child: Stack(
             children: <Widget>[
               Positioned.fill(
-                child: HomeMockMap(
-                  is3D: _is3D, isDark: _isDark, traffic: _traffic,
+                child: SharedMapView(
+                  key: _mapKey,
+                  is3D: _is3D, isDark: _isDark,
+                  trafficEnabled: _traffic, followVehicle: _follow,
+                  onFollowChanged: (value) =>
+                      setState(() => _follow = value),
                 ),
               ),
               Positioned(
@@ -157,7 +162,8 @@ class _HomePageState extends State<HomePage> {
                       onDayNight: () => setState(() => _isDark = !_isDark),
                       onRecenter: () {
                         setState(() => _follow = true);
-                        _message('Đã về vị trí xe mô phỏng');
+                        _mapKey.currentState?.recenter();
+                        _message('Đã về vị trí xe mẫu, GPS chưa bật');
                       },
                     ),
                   ),
@@ -191,7 +197,7 @@ class _HomePageState extends State<HomePage> {
               ),
               const Positioned(
                 left: 10, bottom: 10,
-                child: Text('BẢN ĐỒ MẪU', style: TextStyle(
+                child: Text('VỊ TRÍ MẪU', style: TextStyle(
                   color: AppColors.navyInk,
                   fontSize: 8, fontWeight: FontWeight.bold,
                 )),

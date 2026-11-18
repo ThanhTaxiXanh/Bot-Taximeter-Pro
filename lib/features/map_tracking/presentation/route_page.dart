@@ -5,7 +5,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/app_shell.dart';
 import '../../../shared/glass_widgets.dart';
-import 'mock_travel_data.dart';
+import '../../../shared/shared_map_view.dart';
 
 /// Lập tuyến bằng số liệu giả, chưa gọi OSRM hay tính cước thực.
 class RoutePage extends StatefulWidget {
@@ -137,7 +137,10 @@ class _RoutePageState extends State<RoutePage> {
   Widget _map() => SizedBox(
     height: 198,
     child: Stack(children: <Widget>[
-      Positioned.fill(child: MockRouteMap(selectedRoute: _selectedRoute)),
+      Positioned.fill(child: SharedMapView(
+        is3D: _is3D, isDark: false, trafficEnabled: _traffic,
+        followVehicle: false, showRoute: true, routeIndex: _selectedRoute,
+      )),
       Positioned(
         right: 5, top: 5,
         child: SizedBox(
