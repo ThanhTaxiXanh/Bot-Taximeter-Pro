@@ -19,7 +19,7 @@ Cập nhật: 18/11/2026 (giờ Việt Nam). Repo `ThanhTaxiXanh/Bot-Taximeter-P
 - **Màn Đang chạy chuyến** hiển thị tổng cước/quãng đường/giây chờ từ controller, có cộng BOT chọn nhanh/nhập thủ công, xác nhận Kết thúc và truyền số liệu về màn Biên lai. Cước hiển thị là **tham khảo theo GPS, chưa phải đồng hồ taxi kiểm định**. Không có GPS hợp lệ thì không có quãng đường tính mới.
 - **Cài đặt → Biểu phí & Phí chờ:** chỉnh 5 đơn giá, tổng số phút miễn phí (0/3/5/10/15 hoặc số tùy chỉnh 0–1440), bật/tắt tự Waiting. Lưu trên thiết bị bằng `shared_preferences`, đọc khi bắt đầu một cuốc mới. Cấu hình của cuốc đang chạy nằm trong snapshot, không thay đổi giữa chuyến.
 - Các bài kiểm thử mới: `test/fare_calculator_test.dart`, `test/trip_controller_test.dart`; cập nhật `test/trip_page_test.dart` bỏ số liệu giả 72.000 đ/14:26. Giữ nguyên nhãn CI `Tổng cước`, `Thời gian chờ`, `Tạm dừng`, `Tiếp tục`, `Kết thúc`, `Biên lai chuyến đi`, `Xác nhận`, `Hủy`.
-- **Kiểm chứng Bước 10:** CI #17, #19 đều có widget test lỗi dù workflow success. CI #20 (commit `2b87ec1`) analyzer/APK/smoke đạt, nhưng widget test bị treo 10 phút. Đã tách widget test khỏi singleton/timer và loại bỏ fixture bất đồng bộ, đang chờ CI xác nhận. **CI #22 (commit `9115245`) đã có `flutter test` chạy sạch theo job log; vẫn cần kết quả smoke Android 13 trước khi xác nhận đủ 4/4.**
+- **Kiểm chứng Bước 10:** CI #17/#19/#20 từng có widget test lỗi hoặc timeout, dù workflow đôi khi báo success. Đã sửa fixture bất đồng bộ, tách controller trong widget test khỏi singleton và timer. **CI #23 (commit `fb5519b`) đã xác nhận analyzer ✅, 42 unit/widget test ✅, APK arm64 ✅, smoke Android 13 (7/7) ✅.** Chưa kiểm tra SQLite/GPS thật trên Redmi.
 
 ## Cây thư mục chính
 
@@ -84,7 +84,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 ## Kết quả CI
 
 - **CI #16** commit `960bdf5`: 4/4 đạt. https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44284562646
-- **Bước 10:** CI #20 test lỗi: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44311371146. CI #21 đã sửa lỗi fixture Step10, nhưng phát hiện lỗi UI mới của Step11. CI #22 (https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44315473823): analyzer ✅, test ✅ (đối chiếu job log), APK ✅, smoke Android 13 đang kiểm tra. Issue #1: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1
+- **Bước 10 + 11:** **CI #23 đạt 4/4**, commit ứng dụng `fb5519b`: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44317231987. Đã kiểm tra trực tiếp job logs: analyzer không có warning/error (còn lint `info`), 42/42 unit/widget test đạt, APK debug arm64 được build, Android 13 smoke test 7/7 đạt. Issue #1 báo `✅ TẤT CẢ ĐẠT`: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1. APK: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/releases/tag/debug-latest
 - SHA-1 debug: `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`.
 
 ## Cần thử trên điện thoại
@@ -98,9 +98,9 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Ưu tiên hiện tại:** Chạy CI mới xác nhận Bước 10 + 11; sửa mọi lỗi analyzer/test, xác minh APK và smoke Android 13. Sau đó thử GPS/cước/chờ/BOT/SQLite/khôi phục và dịch vụ tuyến thật trên Redmi Note 12 Pro. Không mở Bước 12 trước khi hoàn tất kiểm chứng.
+**Ưu tiên sau khi hoàn tất Bước 11:** Thử trên Redmi Note 12 Pro: GPS, cước GPS, phí chờ/BOT, SQLite, khôi phục chuyến và cấu hình một máy chủ Nominatim/OSRM HTTPS được phép (hiện chưa có endpoint thực). Xác nhận thông tin rẽ và polyline/ETA theo tuyến thật; xử lý offline và phản hồi lỗi API. **Chưa mở Bước 12** cho tới khi người dùng yêu cầu tiếp tục.
 
-## Bước 11 — đang triển khai, chưa nghiệm thu
+## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
 - `place_search_service.dart`: tìm địa chỉ Nominatim có cấu hình qua HTTPS (mặc định tắt), chặn API Nominatim công cộng; chỉ gọi thủ công, cache 24h/64 câu, tối đa 5 kết quả, giới hạn theo tiến trình 1,2 giây/truy vấn.
 - `osrm_route_service.dart`: định tuyến qua máy chủ OSRM HTTPS do nhà vận hành cung cấp (mặc định tắt), chặn demo công cộng, tối đa 3 điểm/3 tuyến, GeoJSON, ETA, danh sách rẽ, cache 10 phút/24 truy vấn.
@@ -108,4 +108,4 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 - Mọi kết quả mẫu được ghi nhãn rõ và vẫn dùng trong CI; không xin Google Maps API key cho widget test.
 - Chưa có dẫn đường giọng nói hay theo dõi tiến độ rẽ trực tiếp trên TripPage. BOT, kẹt xe và vị trí GPS không được suy đoán. Khoảng cách tuyến OSRM không thay thế GPS để tính cước đang chạy.
 - Cấu hình dịch vụ Nominatim/OSRM HTTPS được phép ngay trên điện thoại qua **Cài đặt → Máy chủ tìm địa chỉ & định tuyến → Lưu máy chủ tuyến**. URL lưu trong SharedPreferences, phục hồi khi mở app, để trống = tắt dịch vụ. Không cần đổi workflow/Google Maps API key. Hướng dẫn chính thức tại `docs/ROUTING_SETUP.md`.
-- Bổ sung `test/route_services_test.dart`, `test/route_live_widgets_test.dart` và `test/routing_server_settings_test.dart` dùng phản hồi giả lập, không cần mạng. **CI #22 đạt analyzer, test, APK; đang xác minh smoke, sau đó cần một CI mới cho tính năng URL lưu trên máy.**
+- Bổ sung `test/route_services_test.dart`, `test/route_live_widgets_test.dart` và `test/routing_server_settings_test.dart` dùng phản hồi giả lập, không cần mạng. **CI #23 commit `fb5519b` đạt đủ 4/4.** Hạ tầng Nominatim/OSRM tự quản hoặc được cấp phép và thử nghiệm tuyến thật trên điện thoại vẫn chưa thực hiện; không tuyên bố dịch vụ thực địa đã hoạt động.
