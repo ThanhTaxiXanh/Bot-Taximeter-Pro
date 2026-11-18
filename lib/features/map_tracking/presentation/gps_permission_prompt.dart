@@ -4,7 +4,7 @@ import '../data/gps_tracker.dart';
 
 /// Hỏi rõ mục đích trước khi yêu cầu quyền vị trí của Android.
 Future<bool> confirmGpsStart(
-  BuildContext context, {bool trip = false},
+  BuildContext context, {bool trip = false}
 ) async {
   if (GpsTracker.useMock) return false;
   final accepted = await showDialog<bool>(

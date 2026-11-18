@@ -233,7 +233,7 @@ class SharedMapViewState extends State<SharedMapView> {
         },
         onCameraIdle: () => _programmaticMove = false,
       )),
-      const Positioned(left: 5, bottom: 4, child: IgnorePointer(
+      Positioned(left: 5, bottom: 4, child: IgnorePointer(
         child: Text(
           widget.vehiclePosition == null
               ? 'GPS CHƯA XÁC ĐỊNH · KHÔNG CÓ MARKER'

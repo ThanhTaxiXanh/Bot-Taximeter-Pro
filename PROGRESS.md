@@ -93,6 +93,7 @@ Dart SDK >=3.12.0 <4.0.0. Flutter trong CI #13: 3.50.0 stable. Nên đặt repo 
 - Báo cáo: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1
 - **CI #13** (commit `8634f59`), 4/4 hạng mục đều đạt: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44274743679
 - **CI #14**, commit `ba9383e`: thất bại ở `flutter create / pub get` vì `wakelock_plus 1.8.2` yêu cầu `dbus ^0.8.0` trong khi `geolocator_linux` yêu cầu `dbus ^0.7.3`. Chưa chạy analyzer/test/APK. Đã ghim lại `wakelock_plus 1.8.0` theo gợi ý resolver; chờ CI commit sửa lỗi xác nhận.
+- **CI #15**, commit `e4c3214`: giải dependency/chuẩn bị Android thành công nhưng `flutter analyze`, widget test, APK và Android smoke đều lỗi biên dịch bởi 2 chỗ: dấu phẩy sau cụm tham số `{bool trip = false}` trong `gps_permission_prompt.dart` và `const Positioned` chứa `widget.vehiclePosition` tại `shared_map_view.dart:236`. Đã chỉnh đúng hai file nguồn; cần CI commit tiếp theo xác nhận.
 - SHA-1 debug CI: `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`.
 - Repo public có debug keystore cố định; nên chuyển private. Google Maps key nằm trong GitHub Secret `MAPS_API_KEY`, không commit vào repo.
 
