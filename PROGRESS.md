@@ -1,18 +1,18 @@
 # BỘT TAXIMETER PRO — PROGRESS
 
-Cập nhật: 18/11/2026, múi giờ Việt Nam.
-Repo: `ThanhTaxiXanh/Bot-Taximeter-Pro`, nhánh `main`.
+Cập nhật: 18/11/2026 (giờ Việt Nam). Repository: `ThanhTaxiXanh/Bot-Taximeter-Pro`, nhánh `main`.
 
 ## Đã làm
 
-- **Bước 1:** dự án Flutter `bot_taximeter_pro`, `ProviderScope`, GoRouter 7 tuyến, cờ `kCI`, CI/CD trong 5 file Phụ lục A, ghi mã ở `main`.
-- **Bước 2:** AppTheme tối, màu cyan/neon navy, Be Vietnam Pro qua `google_fonts` (CI chọn font hệ thống), AppShell, GlassCard, NeonButton, MapControlButtons, StatCard, RoutePreviewPainter.
-- **Sửa lỗi CI cũ:** báo cáo CI #3 (commit `c0f8343`) còn warning `unused_import` trong `integration_test/app_smoke_test.dart`. Đã kiểm tra và xóa lại import này, commit `f91f39b`; chưa có báo cáo kiểm chứng bản sửa.
-- **Bước 3:** Home mock với khung chung AppShell, chip GPS/Google Maps 3D/Follow xe, bản đồ giả `HomeMockMapPainter`, cụm bản đồ 3D/2D/định vị/ngày-đêm/giao thông, số tốc độ 42 km/h và biển tốc độ mẫu 60 (chạm chọn được), vị trí xe và tên đường, 2 thẻ thông tin, 4 nút điều hướng, Bắt đầu và Lịch sử.
-- Home có tương tác mẫu: chuyển 2D/3D, chế độ sáng/tối, lớp giao thông giả, Follow xe, ghi đè số trên biển minh họa, menu chức năng. Chỉ dùng `setState`, không đọc GPS hay gọi API.
-- Route `/` dùng `HomePage` mới; giữ nguyên sáu màn placeholder và 7 đường dẫn GoRouter để CI smoke test không bị đổi luồng.
-- Thêm `test/home_page_test.dart` kiểm tra bố cục/nhãn, chuyển 2D/3D, biển tốc độ mẫu và nút Tìm kiếm.
-- Giữ nguyên `.github/`, `ci/`, `ci/debug.keystore`, thiết kế ở `docs/design/`, và mã nguồn ổn định của các màn khác.
+- **Bước 1:** khởi tạo Flutter `bot_taximeter_pro`, Riverpod, GoRouter 7 route, `kCI`, 5 file CI/CD từ Phụ lục A.
+- **Bước 2:** theme navy/cyan, kính mờ `BackdropFilter`, Be Vietnam Pro qua `google_fonts`, `AppShell`, `GlassCard`, `NeonButton`, `MapControlButtons`, `StatCard`, `RoutePreviewPainter`.
+- **Bước 3:** Màn Home mock với bản đồ `CustomPainter`, chip trạng thái, số tốc độ và biển giới hạn minh họa, điều khiển 2D/3D/giao thông, nút điều hướng. Có `test/home_page_test.dart`.
+- **Sửa lỗi CI #5:** widget test `Biển tốc độ mẫu cho phép chọn số minh họa` tìm `80` trước khi hộp chọn đóng. Đã sửa đúng `test/home_page_test.dart` để pump nhiều frame; commit `5fb52f2`, **chưa có CI xác nhận**.
+- **Bước 4:** Màn 2 `SearchPage`: ô tìm kiếm, nút xóa/micro mô phỏng, sáu chip danh mục, bản đồ nhỏ vẽ nội bộ, chọn địa điểm, `Chọn điểm đi` và `Chọn điểm đến`, danh sách `Kết quả tìm kiếm`, `Tìm kiếm gần đây` và xóa các mục. Dữ liệu POI/địa chỉ/khoảng cách là minh họa.
+- **Bước 4:** Màn 3 `RoutePage`: chọn điểm đi/dừng/đến, thêm và bỏ điểm dừng, đảo chiều, ba phương án `Nhanh nhất`/`Ít phí`/`Ít kẹt xe`, bản đồ polyline mẫu với tuyến được chọn và 2 tuyến thay thế, 4 số liệu ETA/quãng đường/cước/BOT, tổng quan lộ trình, nút `Bắt đầu dẫn đường` và `Lưu tuyến` (thông báo chưa có lưu thật).
+- Liên thông lựa chọn địa điểm từ Màn 2 đến Màn 3 bằng `GoRouterState.extra` (map String/String). Điều hướng `Bắt đầu dẫn đường` mở Màn 4 hiện tại.
+- Thêm `test/search_route_page_test.dart` kiểm tra chọn điểm đến, cập nhật tuyến, đổi phương án và chuyển Màn 4.
+- Không sửa 5 file bộ CI, `ci/debug.keystore`, `integration_test/app_smoke_test.dart`, dữ liệu `docs/design/` hoặc các màn 4–7.
 
 ## Cây thư mục hiện tại
 
@@ -24,12 +24,9 @@ Repo: `ThanhTaxiXanh/Bot-Taximeter-Pro`, nhánh `main`.
 ├── README.md
 ├── analysis_options.yaml
 ├── ci/
-│   ├── debug.keystore               (do CI tự tạo, không sửa)
-│   └── scripts/
-│       ├── prepare_android.sh
-│       ├── patch_android.py
-│       └── make_report.py
-├── docs/design/                     (7 ảnh + README)
+│   ├── debug.keystore              (CI tự tạo, không sửa)
+│   └── scripts/{prepare_android.sh,patch_android.py,make_report.py}
+├── docs/design/                    (7 ảnh thiết kế và README.md)
 ├── integration_test/app_smoke_test.dart
 ├── lib/
 │   ├── core/
@@ -39,17 +36,22 @@ Repo: `ThanhTaxiXanh/Bot-Taximeter-Pro`, nhánh `main`.
 │   ├── features/map_tracking/presentation/
 │   │   ├── home_page.dart
 │   │   ├── home_map_mock.dart
-│   │   └── home_widgets.dart
+│   │   ├── home_widgets.dart
+│   │   ├── mock_travel_data.dart
+│   │   ├── search_page.dart
+│   │   └── route_page.dart
 │   ├── shared/
 │   │   ├── app_shell.dart
 │   │   ├── glass_widgets.dart
 │   │   └── route_preview_painter.dart
 │   └── main.dart
 ├── pubspec.yaml
-└── test/home_page_test.dart
+└── test/
+    ├── home_page_test.dart
+    └── search_route_page_test.dart
 ```
 
-`android/` chưa được commit, workflow tự sinh trong CI.
+`android/` được CI tạo lại khi chạy, không commit vào repo.
 
 ## Dependencies và phiên bản
 
@@ -62,42 +64,43 @@ Repo: `ThanhTaxiXanh/Bot-Taximeter-Pro`, nhánh `main`.
 | `flutter_test` (dev) | Flutter SDK |
 | `integration_test` (dev) | Flutter SDK |
 
-- Dart SDK: `>=3.12.0 <4.0.0`.
-- CI #3 dùng **Flutter 3.50.0** stable. Nên đặt biến repo `FLUTTER_VERSION=3.50.0` để ghim phiên bản.
+Dart SDK `>=3.12.0 <4.0.0`. CI hiện sử dụng Flutter **3.50.0** stable theo báo cáo #5. Có thể ghim `FLUTTER_VERSION=3.50.0` trên GitHub.
 
 ## Quyết định kỹ thuật
 
-- Bước 3 chỉ là **dữ liệu minh họa**. Cả “GPS tốt”, “Google Maps 3D”, “42 km/h”, “60 km/h”, bản đồ, vị trí và tên đường đều không phản ánh thực tế. Người dùng được thông báo qua nhãn “BẢN ĐỒ MẪU” và khi chạm chip/biển.
-- **Không dùng** `GoogleMap`, không gọi Google Maps SDK/API, không xin quyền GPS, không gọi Nominatim/OSRM; chi phí Maps của bước này bằng 0.
-- `HomeMockMapPainter` vẽ các con đường và tòa nhà giả bằng `Canvas`. Chế độ 3D là hiệu ứng giả lập, không phải dữ liệu bản đồ 3D thật.
-- Home dùng `AppShell`, các thẻ `GlassCard`/nút `NeonButton` và các component riêng; cỡ bản đồ dựa trên chiều cao màn hình, body có thể cuộn khi không đủ chỗ.
-- Biển mẫu cho chọn 40–120 km/h chỉ thay đổi hiển thị tạm thời. Không có `SpeedLimitEngine`/cảnh báo vượt tốc (thực hiện Bước 12).
-- Giá ước tính là con số mẫu. Giá cước thật chỉ có sau khi có điểm đến và FareCalculator ở các bước sau.
-- Cờ `kCI` đã có, không chạy animation vô hạn. Các widget test dùng `MaterialApp.router` với theme hệ thống, không tải font hay gọi mạng.
-- Package Android theo quyết định người dùng: `vn.bottaximeter.bot_taximeter_pro`. Cần cùng SHA-1 của khóa ký khi giới hạn Maps.
+- Bước 4 tiếp tục **mock trước, logic thật sau**. Lọc tìm kiếm bằng chuỗi và danh sách POI cục bộ; dữ liệu không lấy từ Nominatim, OSRM, Overpass hay API Google. Không tự động gọi mạng khi nhập ký tự.
+- `mock_travel_data.dart` giữ dữ liệu POI mẫu và `MockRoutePainter` có ba polyline mẫu; màn Tìm kiếm tái sử dụng `HomeMockMapPainter` với chip 2D/3D/giao thông.
+- Thông tin ETA, km, giá ước tính và phí BOT chỉ là số minh họa theo ảnh thiết kế, không dùng để báo giá hay điều hướng thật.
+- Tab `Nhanh nhất`/`Ít phí`/`Ít kẹt xe` thay đổi tuyến canvas và thông số mẫu. Điều khiển 2D/3D và giao thông trên màn tuyến chỉ là giao diện thử, chưa có SDK bản đồ thật.
+- Màn Tìm kiếm nhận từ khóa và lọc danh mục **offline**; phần micro chỉ hiển thị thông báo. Lưu lịch sử tìm kiếm tạm thời trong state; không lưu máy.
+- Màn Lập tuyến cho phép sửa điểm đi, điểm dừng, điểm đến và đảo chiều. `Lưu tuyến` chỉ hiển thị thông báo, không giả vờ đã ghi vào SQLite.
+- Điều hướng dùng `GoRouter` cũ; giữ nguyên các nhãn giao diện smoke test. Không thêm dependency ở Bước 4.
+- `kCI` không gọi GPS, GoogleMap hoặc mạng. Chưa có animation vô hạn mới.
+- Package Android hiện dùng `vn.bottaximeter.bot_taximeter_pro` theo lựa chọn người dùng.
 
 ## Kết quả CI gần nhất
 
-- Issue theo dõi: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1
-- **CI #3, commit `c0f8343`:** Flutter 3.50.0; `flutter test` đạt; APK debug đạt; test giao diện Android 13 đạt; `flutter analyze` còn **1 warning** `unused_import`.
-- Đã sửa file báo warning ở commit `f91f39b`. Chưa có báo cáo từ CI đúng commit Bước 3; **không xác nhận CI xanh cho lần push mới**.
-- SHA-1 khóa debug đã được báo: `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`.
+- Báo cáo: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1
+- **CI #5**, commit `3fde08e`: `flutter analyze` đạt, `flutter test` lỗi 1 bài test tốc độ, build APK debug đạt, smoke test Android 13 đạt.
+- Nguyên nhân test: `expect(find.text('80'))` chạy sau thời gian bơm frame chưa đủ cho bottom sheet đóng và widget cập nhật. Đã bổ sung bơm frame trong `test/home_page_test.dart`, commit `5fb52f2`; chưa có báo cáo mới xác nhận.
+- **Chưa có kết quả CI cho commit Bước 4**; không xác nhận các test mới đạt cho tới khi có báo cáo đúng commit.
+- SHA-1 khóa debug: `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`.
 
 ## Lỗi đã biết / rủi ro
 
-- Không có Flutter SDK trong môi trường làm việc trực tiếp, nên chưa chạy `flutter analyze` / `flutter test` tại chỗ; cần kiểm chứng trong GitHub Actions sau commit Bước 3.
-- Bản đồ, tốc độ, giao thông và quãng đường trên Home đều là **mô phỏng**, không dùng để điều khiển xe hay làm căn cứ pháp lý.
-- Repo hiện công khai và có `ci/debug.keystore` ký debug cố định, nên có rủi ro người ngoài dùng cùng khóa để ký APK. Khuyến nghị repo private.
-- Be Vietnam Pro có thể cần tải lần đầu trên máy thật; fallback offline cần kiểm tra và đóng gói font khi hoàn thiện.
-- Màn 2–7 vẫn dùng UI placeholder. Chưa tích hợp dữ liệu GPS, tính cước thật, SQLite, định tuyến và thanh toán.
+- Môi trường tác giả không có Flutter SDK; không thể chạy `flutter analyze`/`flutter test` trực tiếp. Dựa vào báo cáo CI và chỉ sửa đúng file gây lỗi ở lượt tiếp.
+- Mọi giá trị tìm kiếm, tuyến, ETA và cước hiển thị chỉ là mẫu; không dùng cho điều hướng thực tế hoặc báo cước.
+- Dịch vụ `speech_to_text`, Nominatim, OSRM và lưu lịch sử thật chưa được tích hợp (đúng lộ trình).
+- App đang sử dụng keystore debug cố định trên repo **public**, có nguy cơ bị dùng để ký APK giả. Nên đặt repo private.
+- Font Be Vietnam Pro tải lần đầu có thể cần Internet; cần thử fallback offline trên thiết bị.
 
 ## Cần thử trên điện thoại
 
-- Trên Redmi Note 12 Pro: kiểm tra bố cục Home, chữ không tràn, độ dễ bấm 5 nút bản đồ, hiển thị bảng số tốc độ và thanh chức năng.
-- Thử nút 2D/3D, sáng/tối, giao thông giả, Follow xe, biển tốc độ mẫu, Bắt đầu và Lịch sử, điều hướng 4 chức năng.
-- Về sau: GPS thực, tốc độ, độ chính xác, quyền Android 13/14, foreground service, tối ưu pin MIUI, bản đồ Google thật/traffic.
-- Đối chiếu package `vn.bottaximeter.bot_taximeter_pro` và SHA-1 CI với thông số hạn chế khóa Google Maps.
+- Redmi Note 12 Pro: mở hai màn mới, cuộn xem đủ nội dung, xem có tràn chữ hoặc nút quá nhỏ.
+- Kiểm tra tìm kiếm từ khóa, chip lọc, chọn mục từ danh sách, chọn điểm đi/đến rồi chuyển sang tuyến, đổi 3 phương án, thêm/xóa điểm dừng, đảo chiều, bắt đầu dẫn đường.
+- Kiểm tra tiếng Việt trong TextField khi mở bàn phím và hành vi nút quay lại.
+- Các bước sau: GPS thật, quyền Android 13/14, độ chính xác, camera Maps, âm báo/foreground service, tối ưu pin MIUI.
 
 ## Việc tiếp theo
 
-**Bước 4:** Màn 2 **Tìm kiếm** và Màn 3 **Lập tuyến đường**, cả hai dùng mock data. Giữ nguyên luồng, nhãn smoke test, không gọi API.
+**Bước tiếp theo: 5** — Màn 4 Đang chạy chuyến (mock, đồng hồ chạy giả), dùng bộ shared widgets và giữ nguyên nhãn smoke test.

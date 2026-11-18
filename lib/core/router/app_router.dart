@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../app_config.dart';
 import '../../features/map_tracking/presentation/home_page.dart';
+import '../../features/map_tracking/presentation/search_page.dart';
+import '../../features/map_tracking/presentation/route_page.dart';
 
 /// Bảy tuyến màn hình cơ bản. Giao diện hoàn chỉnh được bổ sung từ bước 2.
 abstract final class AppRouter {
@@ -18,8 +20,18 @@ abstract final class AppRouter {
         initialLocation: home,
         routes: <RouteBase>[
           GoRoute(path: home, builder: (_, _) => const HomePage()),
-          GoRoute(path: search, builder: (_, _) => const _SearchPage()),
-          GoRoute(path: route, builder: (_, _) => const _RoutePage()),
+          GoRoute(path: search, builder: (_, _) => const SearchPage()),
+          GoRoute(
+            path: route,
+            builder: (_, state) {
+              final extra = state.extra;
+              final points = extra is Map<String, String> ? extra : null;
+              return RoutePage(
+                initialStart: points?['start'],
+                initialEnd: points?['end'],
+              );
+            },
+          ),
           GoRoute(path: trip, builder: (_, _) => const _TripPage()),
           GoRoute(path: history, builder: (_, _) => const _HistoryPage()),
           GoRoute(path: receipt, builder: (_, _) => const _ReceiptPage()),
@@ -97,35 +109,6 @@ class _NavButton extends StatelessWidget {
           : OutlinedButton(onPressed: onPressed, child: Text(label)),
     );
   }
-}
-
-class _SearchPage extends StatelessWidget {
-  const _SearchPage();
-
-  @override
-  Widget build(BuildContext context) => const _PageShell(
-        title: 'Tìm kiếm',
-        children: <Widget>[
-          TextField(decoration: InputDecoration(hintText: 'Nhập địa chỉ')),
-          SizedBox(height: 12),
-          Text('Kết quả tìm kiếm'),
-          Text('Dữ liệu mẫu sẽ được thêm ở bước 4.'),
-        ],
-      );
-}
-
-class _RoutePage extends StatelessWidget {
-  const _RoutePage();
-
-  @override
-  Widget build(BuildContext context) => const _PageShell(
-        title: 'Lập tuyến đường',
-        children: <Widget>[
-          Text('Điểm đi: Vị trí hiện tại'),
-          Text('Điểm đến: Chưa chọn'),
-          _NavButton('Bắt đầu dẫn đường', AppRouter.trip, primary: true),
-        ],
-      );
 }
 
 class _TripPage extends StatefulWidget {
