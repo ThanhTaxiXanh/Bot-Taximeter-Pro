@@ -56,7 +56,10 @@ void main() {
     expect(find.text('Giới hạn tốc độ (minh họa)'), findsOneWidget);
 
     await tester.tap(find.text('80 km/h'));
-    await tester.pump(const Duration(milliseconds: 300));
+    // Bottom sheet có hoạt ảnh đóng; đợi route hoàn tất và setState.
+    for (var i = 0; i < 8; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
     expect(find.text('80'), findsOneWidget);
   });
 
