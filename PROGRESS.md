@@ -90,7 +90,8 @@ Dart SDK `>=3.12.0 <4.0.0`. CI #11 dùng **Flutter 3.50.0 stable**. Có thể gh
 
 - Báo cáo Issue: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1
 - **CI #11**, commit `c9d0a95`: build APK debug ✅; flutter analyze ❌ (2 unused import); flutter test ❌ (4 bài do tràn Row Receipt/Material ListTile); smoke Android 13 ❌ (Màn Cài đặt).
-- Đã sửa nhóm lỗi CI #11 trong commit `9b674f4`. **Chưa có báo cáo CI đúng commit Bước 8**, không khẳng định build/test mới đạt.
+- **CI #12**, commit sửa lỗi `9b674f4`: **flutter analyze ✅, flutter test ✅, build APK debug ✅, smoke Android 13 ✅**, xác nhận đã sửa triệt để các lỗi Bước 7. Lượt chạy: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44273023202
+- **Chưa có báo cáo CI đúng commit Bước 8 `8634f59`**; không khẳng định bản Maps mới build/test đạt.
 - SHA-1 debug: `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`.
 
 ## Lỗi đã biết / rủi ro
