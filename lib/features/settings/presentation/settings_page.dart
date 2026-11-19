@@ -9,6 +9,7 @@ import '../../road_safety/speed_alert_widgets.dart';
 import '../../sos/sos_widgets.dart';
 import '../../receipt/data/vietqr_transfer_payload.dart';
 import '../../receipt/presentation/vietqr_bank_picker.dart';
+import 'led_greeting_page.dart';
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
   @override
@@ -248,6 +249,7 @@ class _SettingsPageState extends State<SettingsPage> {
       SettingsField(label: 'Câu chào LED', controller: _greeting),
       SettingsChoice( label: 'Kích thước chữ', icon: Icons.text_fields, options: const <String>['Nhỏ', 'Vừa', 'Lớn'], value: _fontSize, onChanged: (v) => setState(() => _fontSize = v),
       ),
+      LedGreetingLaunchButton(controller: _greeting, sizeLabel: _fontSize),
       SettingsToggle(
         title: 'Chế độ đơn giản', subtitle: 'Tùy chọn sẽ áp dụng ở bước hoàn thiện', value: _simple, icon: Icons.layers, onChanged: (v) => setState(() => _simple = v),
       ),

@@ -102,7 +102,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Bước 20 — danh sách ngân hàng VietQR, seed offline và cache SQLite v3** đã viết mã và commit, **chưa được xác minh CI của commit mới**. Đã xác nhận **CI #36 commit `f66f3be` đạt 4/4** trước khi triển khai. Có thể chọn ngân hàng/BIN qua mục Thanh toán trong Cài đặt, nhưng phải bấm **Lưu cài đặt** để lưu; không tự bật VietQR và không thay đổi tài khoản nhận tiền. Xem [`docs/VIETQR_BANKS_STEP20.md`](docs/VIETQR_BANKS_STEP20.md). **Bước tiếp theo: 21 (đề xuất LED chào khách)**, chỉ thực hiện sau khi CI của Bước 20 đạt và người dùng yêu cầu `TIẾP TỤC`; nếu CI lỗi phải sửa trước.
+**Bước 21 — màn hình LED chào khách** đã triển khai mã Flutter, gắn nút mở từ **Cài đặt → Giao diện**, kèm widget test và tài liệu [`docs/LED_GREETING_STEP21.md`](docs/LED_GREETING_STEP21.md). **CI #37 commit `3b6b26d` đạt 4/4** trước khi bắt đầu bước này. **Chưa xác nhận CI của commit Bước 21**; phải kiểm tra đúng SHA, và xử lý mọi lỗi trước khi bước tiếp. Bước tiếp theo đề xuất: **22 — tối ưu pin và rà soát README/chi phí Maps** sau khi người dùng yêu cầu `TIẾP TỤC` và CI Bước 21 đạt.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -264,3 +264,15 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - Thêm `test/vietqr_bank_repository_test.dart` kiểm tra seed/cache offline, không tự gọi API, cập nhật thành công/thất bại giữ cache, phân loại BIN, trùng, ngân hàng không hỗ trợ, widget chọn ngân hàng giả lập. **Tổng cộng 5 Dart file**, mỗi file không quá 300 dòng.
 - **Cần thử trên điện thoại:** cài đè APK (không gỡ ứng dụng) và kiểm tra migration SQLite v2→v3 giữ snapshot/lịch sử; chọn ngân hàng, đối chiếu đúng BIN/số tài khoản/chủ TK bằng ứng dụng ngân hàng; dùng offline mở lại vẫn có danh sách; làm mới qua mạng chỉ khi cần; QR vẫn không báo đã nhận tiền. Chưa có integration test native riêng cho bảng banks trên thiết bị.
 - **CI của commit Bước 20 chưa được xác minh tại thời điểm ghi.** Bước tiếp theo: **21**, chỉ sau yêu cầu `TIẾP TỤC`, ưu tiên sửa lỗi CI nếu phát sinh.
+
+
+## Bước 21 — màn hình LED chào khách (19/11/2026)
+
+- **Điều kiện:** Đã đọc Issue #1 và jobs của CI #37 commit `3b6b26d`: **4/4 đạt** (analyze, flutter test, APK debug arm64, Android 13). Không cần sửa Bước 20.
+- Theo **Master Prompt mục 8**, LED là màn hình chữ lớn toàn màn hình cho khách nhìn, mở từ Cài đặt (phần tính năng cuối). Không thêm route GoRouter (vẫn 7 route), không đổi package hay manifest.
+- Thêm `lib/features/settings/presentation/led_greeting_page.dart`: màn `LedGreetingPage` riêng che giao diện thông thường, nền navy/cyan neon, chữ lớn giữa màn dùng `FittedBox.scaleDown` để vừa cả màn nhỏ và ngang; nút `Đóng màn hình LED` ở phía trên. Các cỡ `Nhỏ/Vừa/Lớn` quy đổi cỡ chữ gốc 64/88/120; chuỗi dài tự co. Không tự phát nhạc, không cần camera/GPS/mạng.
+- Chữ LED là **bản xem trước** từ ô `Câu chào LED` và lựa chọn `Kích thước chữ` đang hiển thị. Nếu chưa lưu, chỉ hiện tạm; **không tự ghi SharedPreferences**. Cài đặt vẫn lưu bằng nút `Lưu cài đặt` hiện hữu với keys `led_greeting`, `font_size` như trước. Chuỗi được bỏ ký tự điều khiển và giới hạn 120 ký tự hiển thị; trống dùng `Xin chào quý khách!`; không thay đổi dữ liệu gốc.
+- Chỉ thêm **2 dòng** trong `settings_page.dart` (import và nút mở LED) để giữ tệp ≤300 dòng, không thay bố cục cài đặt và các nút cũ. Tạo `test/led_greeting_test.dart`: logic chuẩn hóa/cỡ chữ, màn từ Cài đặt và nút đóng, bản xem trước không tự lưu. Tổng cộng **3 tệp Dart** có thay đổi và 1 tài liệu; không thêm dependency.
+- Giữ nguyên phần cước, GPS, báo tốc độ, SOS, SQLite v3, cache ngân hàng VietQR, QR/PDF, debug signing và workflow CI.
+- **Cần thử trên điện thoại:** cài đè bản debug sau khi CI đạt; khi xe đỗ, thử hiển thị từ Cài đặt, nhập lời chào tiếng Việt có dấu, thử 3 cỡ chữ và xoay dọc/ngang; quay lại bằng nút Đóng và phím Back, kiểm tra `Lưu cài đặt` không bị tác động. Không thao tác với điện thoại khi đang lái.
+- **CI commit Bước 21 chưa xác minh tại thời điểm ghi**. Bước kế tiếp chỉ sau lệnh `TIẾP TỤC` và xác nhận CI.
