@@ -120,7 +120,7 @@ class ReceiptPdfService {
           margin: pw.EdgeInsets.zero,
           build: (_) => pw.Image(image, fit: pw.BoxFit.fill),
         ));
-        return document.save();
+        return await document.save();
       } finally {
         rendered.dispose();
       }
