@@ -243,3 +243,11 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - **CI #34 commit `9773e2d` chưa đạt:** trong bước `flutter create`/pub resolution, `share_plus 11.1.0` phụ thuộc `win32 ^5.5.3`, còn `wakelock_plus 1.8.0` phụ thuộc `win32 ^6.0.1`. Các bước analyze/test/build/Android integration chưa chạy, không có APK mới từ #34.
 - Chỉ đổi `pubspec.yaml`: `share_plus: 11.1.0` → **`share_plus: 13.3.1`**, phiên bản yêu cầu `win32` 6; vẫn dùng `url_launcher: 6.3.3` và `wakelock_plus: 1.8.0`.
 - Cập nhật `docs/SOS_STEP19.md` và `PROGRESS.md` cho đúng thực tế, **không** thay mã SOS, GPS/cước, SQLite/PDF/VietQR, package Android, debug keystore hoặc workflow. CI của commit sửa phụ thuộc **chưa được xác minh**.
+
+
+### Sửa lỗi CI #35 của Bước 19 (19/11/2026)
+
+- CI #35, commit `bb2485e`: `flutter pub get` đã thành công nhưng `flutter analyze`/unit-widget/build APK không đạt; báo cáo Issue #1 có 3 lỗi cùng nguyên nhân từ `lib/features/sos/sos_widgets.dart:3`.
+- Import sai `../../settings/presentation/settings_widgets.dart` từ thư mục `lib/features/sos/` trỏ sang `lib/settings/` không tồn tại. Sửa thành **`../settings/presentation/settings_widgets.dart`**, đúng đường dẫn tới `lib/features/settings/presentation/settings_widgets.dart`; các lỗi không tìm thấy `SettingsSection` và `SettingsField` là hệ quả của import hỏng.
+- Chỉ sửa **1 dòng trong 1 tệp Dart** và cập nhật `PROGRESS.md`. Không sửa chức năng SOS, dependencies, khóa debug, workflow, GPS/cước, SQLite/PDF/VietQR, 7 route hay màn hình cũ.
+- **Chờ CI của commit sửa lỗi:** chỉ xác nhận thành công sau khi đọc Issue #1 và log đúng SHA. Chưa mở Bước 20.

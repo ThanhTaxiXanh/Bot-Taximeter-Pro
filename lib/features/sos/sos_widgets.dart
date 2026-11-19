@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../settings/presentation/settings_widgets.dart';
+import '../settings/presentation/settings_widgets.dart';
 import 'sos_service.dart';
 
 /// Hai hành động riêng; mỗi hành động phải được tài xế xác nhận lần nữa.
