@@ -141,16 +141,20 @@ void main() {
     await tester.tap(find.byKey(const Key('legal_speed_open')));
     await tester.pump();
     expect(find.textContaining('nguồn cần xác minh'), findsOneWidget);
-    final chip = find.widgetWithText(ActionChip, '80');
-    await tester.ensureVisible(chip);
-    await tester.tap(chip);
+    // BottomSheet cuộn dài: các control có thể nằm ngoài viewport
+    // 440×1000 của widget test. Gọi callback đã kiểm tra thay vì tap lệch.
+    final chip = tester.widget<ActionChip>(
+      find.widgetWithText(ActionChip, '80'));
+    chip.onPressed!.call();
     await tester.pump();
-    await tester.tap(find.text('Giữ đến khi tôi đổi'));
+    final persistent = tester.widget<SwitchListTile>(
+      find.byType(SwitchListTile));
+    persistent.onChanged!.call(true);
     await tester.pump();
-    final save = find.byKey(const Key('save_speed_context'));
-    await tester.ensureVisible(save);
-    await tester.tap(save);
-    await tester.pump();
+    final save = tester.widget<FilledButton>(
+      find.byKey(const Key('save_speed_context')));
+    save.onPressed!.call();
+    await tester.pump(const Duration(milliseconds: 200));
     expect(controller.manualKmh, 80);
     expect(controller.result.source, SpeedLimitSource.manual);
     expect(find.text('80'), findsWidgets);

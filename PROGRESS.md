@@ -102,7 +102,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Ưu tiên hiện tại:** Bước 18 tích hợp biển giới hạn tốc độ nguồn xác minh và OSM chỉ-tham-khảo trên Home/Trip thật; UI mock CI giữ nguyên. Cảnh báo **chỉ trực quan**, không tự xác nhận biển pháp lý từ OSM, không rung/âm thanh. Tài liệu: [`docs/SPEED_LIMIT_STEP18.md`](docs/SPEED_LIMIT_STEP18.md). **CI #31 cho Bước 17 đã đạt 4/4**, CI của commit Bước 18 **chưa xác minh**. Bước tiếp theo **19** (đề xuất SOS thật), chỉ triển khai khi có lệnh `TIẾP TỤC`. Không sửa phần cước, SQLite, PDF/VietQR, package và workflow.
+**Ưu tiên hiện tại:** Sửa **1 widget test Bước 18** từ báo cáo CI #32, commit `8f4bf18`: `flutter analyze` ✅, APK arm64 ✅, Android 13 ✅, nhưng `flutter test` ❌ (một test chọn biển 80 km/h). Log xác định thao tác `tester.tap` vào chip và công tắc ngoài viewport 440×1000; test không cập nhật trạng thái. Chỉ sửa `test/road_context_provider_test.dart` dùng widget callbacks, giữ nguyên mã tính năng Bước 18. Đã ghi fix, **chờ CI của commit mới** để xác minh. **Bước 19 (SOS khẩn cấp) chưa triển khai**; chỉ thực hiện sau khi CI xanh và người dùng yêu cầu tiếp tục.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -215,3 +215,11 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - Thêm `test/road_context_provider_test.dart` với kiểm thử nguồn, cache, 3s/15s và widget. Tổng cộng **5 Dart file** liên quan; không file nào >300 dòng. Tài liệu `docs/SPEED_LIMIT_STEP18.md` ghi rõ giới hạn, cách thử và nguyên tắc tránh cảnh báo sai.
 - **Còn thiếu:** âm báo/rung kiểm soát thực tế; định danh biển theo đoạn và hướng, kiểm chứng thực địa; không khẳng định app xác định chính xác giới hạn hợp pháp trên mọi tuyến. Không ảnh hưởng cước, BOT, snapshot/SQLite, PDF/VietQR.
 - **CI Bước 18 chưa xác nhận tại thời điểm commit. Bước tiếp theo: 19, chờ người dùng TIẾP TỤC.**
+
+
+## Sửa lỗi CI #32 trước Bước 19 (19/11/2026)
+
+- CI #32 tại commit `8f4bf18`: GitHub Actions workflow hiện trạng có `conclusion=success` do một bước tiếp tục khi lỗi; **Issue #1 phản ánh flutter test lỗi**. Phân tích tĩnh, APK, Android integration đạt; `flutter test` có **1 lỗi widget**.
+- Log: `test/road_context_provider_test.dart`, test `Biển mặc định --, nhập thủ công chỉ khi chủ động lưu`; `Expected <80>, Actual <null>`, cảnh báo tap offscreen tại tọa độ y=1382 và y=1477 ngoài `Size(440,1000)`.
+- Sửa đúng test này: dùng `tester.widget<ActionChip>(...).onPressed!.call()`, `SwitchListTile.onChanged!(true)`, `FilledButton.onPressed!.call()` và pump để kiểm tra logic mà không phụ thuộc scrolling/viewport giả lập. **Không thay đổi mã nguồn ứng dụng.**
+- CI mới **chưa xác minh ở thời điểm commit**. Bước 19 chưa thực hiện; phải xác nhận `flutter test` thực sự đạt trước khi bước tiếp.
