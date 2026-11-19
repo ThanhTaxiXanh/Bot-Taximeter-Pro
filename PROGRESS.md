@@ -102,7 +102,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Ưu tiên hiện tại:** Sửa **1 widget test Bước 18** từ báo cáo CI #32, commit `8f4bf18`: `flutter analyze` ✅, APK arm64 ✅, Android 13 ✅, nhưng `flutter test` ❌ (một test chọn biển 80 km/h). Log xác định thao tác `tester.tap` vào chip và công tắc ngoài viewport 440×1000; test không cập nhật trạng thái. Chỉ sửa `test/road_context_provider_test.dart` dùng widget callbacks, giữ nguyên mã tính năng Bước 18. Đã ghi fix, **chờ CI của commit mới** để xác minh. **Bước 19 (SOS khẩn cấp) chưa triển khai**; chỉ thực hiện sau khi CI xanh và người dùng yêu cầu tiếp tục.
+**Đã triển khai Bước 19 (SOS khẩn cấp)** sau khi xác nhận **CI #33, commit `842af5a`, đạt 4/4**. Mã SOS mở ứng dụng gọi điện bằng `tel:` hoặc bảng chia sẻ vị trí GPS bằng `share_plus`, **chỉ sau khi tài xế xác nhận từng thao tác**. Số gọi mặc định 113 và lưu riêng trong Cài đặt. Xem [`docs/SOS_STEP19.md`](docs/SOS_STEP19.md). **CI của commit Bước 19 chưa được xác minh**. Bước tiếp theo được đề xuất là **20 — danh sách/cache ngân hàng VietQR**, chỉ khi người dùng tiếp tục; ưu tiên sửa lỗi CI nếu có.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -223,3 +223,16 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - Log: `test/road_context_provider_test.dart`, test `Biển mặc định --, nhập thủ công chỉ khi chủ động lưu`; `Expected <80>, Actual <null>`, cảnh báo tap offscreen tại tọa độ y=1382 và y=1477 ngoài `Size(440,1000)`.
 - Sửa đúng test này: dùng `tester.widget<ActionChip>(...).onPressed!.call()`, `SwitchListTile.onChanged!(true)`, `FilledButton.onPressed!.call()` và pump để kiểm tra logic mà không phụ thuộc scrolling/viewport giả lập. **Không thay đổi mã nguồn ứng dụng.**
 - CI mới **chưa xác minh ở thời điểm commit**. Bước 19 chưa thực hiện; phải xác nhận `flutter test` thực sự đạt trước khi bước tiếp.
+
+
+## Bước 19 — SOS khẩn cấp có xác nhận (19/11/2026)
+
+- Điều kiện mở: **CI #33 của bản sửa Bước 18 `842af5a` đã đạt 4/4** theo GitHub Actions và Issue #1: analyze, unit/widget, APK arm64, Android 13 integration.
+- Đối chiếu Master Prompt gốc mục 8: **SOS xác nhận → mở số gọi khẩn cấp mặc định 113 / số cấu hình → chia sẻ vị trí bằng `share_plus`**. Không tự gọi hoặc gửi vị trí.
+- Thêm `lib/features/sos/sos_service.dart`: kiểm tra số điện thoại (không chấp nhận dấu lệnh/URL), lưu `sos_phone` vào `SharedPreferences`, mở `tel:` bằng `url_launcher` ở chế độ externalApplication, mở bảng chia sẻ vị trí bằng `share_plus`; không dùng `CALL_PHONE`. Chỉ đọc fix GPS đã lọc, không cho dữ liệu mock, quá 15 giây hoặc độ chính xác >25m; không thu thập lịch sử GPS mới.
+- Thêm `lib/features/sos/sos_widgets.dart`: hộp thoại SOS với nút Gọi và Chia sẻ vị trí **mỗi nút có xác nhận phụ riêng**, xử lý không có GPS/ứng dụng hỗ trợ; `SosSettingsCard` lưu số SOS riêng trong Cài đặt.
+- Chỉ sửa `trip_page.dart` để nút SOS mở chức năng thật; `settings_page.dart` để hiện cấu hình SOS; `test/trip_page_test.dart` kiểm tra không thực hiện khi chưa xác nhận, xử lý GPS cũ/yếu, số hợp lệ và test bằng backend giả không gọi plugin trong CI.
+- `pubspec.yaml` thêm chính xác `url_launcher: 6.3.3` và `share_plus: 11.1.0`; chọn share_plus 11.1.0 để tránh tăng yêu cầu AGP/Kotlin của nhánh 12+ khi build Android trên CI. `docs/SOS_STEP19.md` ghi cách thử an toàn khi xe đứng yên.
+- Giữ nguyên package Android, debug keystore, CI, 7 route, cước/BOT/chờ, SQLite, PDF/VietQR, Maps và module tốc độ. **Chỉ có 5 tệp Dart** liên quan, mỗi tệp dưới 300 dòng.
+- **CI cho commit Bước 19 chưa được kiểm chứng tại thời điểm commit.** Không tuyên bố SOS đã thử với trình gọi/ứng dụng chia sẻ thực trên Redmi khi chưa có nghiệm thu thiết bị.
+- **Bước tiếp theo: 20**, danh sách/cache ngân hàng VietQR (đề xuất), chờ người dùng `TIẾP TỤC` sau khi xem CI Bước 19.

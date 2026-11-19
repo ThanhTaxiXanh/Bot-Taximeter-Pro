@@ -5,6 +5,8 @@ import 'package:bot_taximeter_pro/core/router/app_router.dart';
 import 'package:bot_taximeter_pro/features/trip/presentation/trip_page.dart';
 import 'package:bot_taximeter_pro/features/trip/trip_controller.dart';
 import 'package:bot_taximeter_pro/shared/glass_widgets.dart';
+import 'package:bot_taximeter_pro/features/sos/sos_service.dart';
+import 'package:bot_taximeter_pro/features/sos/sos_widgets.dart';
 
 Future<TripController> openTrip(WidgetTester tester) async {
   // Fixture widget: unit test riêng đã kiểm chứng begin()/SQLite.
@@ -85,8 +87,100 @@ void main() {
     await tester.tap(find.text('SOS'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('SOS (bản mẫu)'), findsOneWidget);
-    await tester.tap(find.text('Đã hiểu'));
+    expect(find.text('SOS · Hỗ trợ khẩn cấp'), findsOneWidget);
+    expect(find.text('Gọi 113'), findsOneWidget);
+    expect(find.text('Chia sẻ vị trí'), findsOneWidget);
+    await tester.tap(find.text('Đóng'));
     await tester.pump();
+  });
+
+  test('Số SOS hợp lệ và lưu trên thiết bị, mặc định là 113', () async {
+    final service = SosService();
+    expect(await service.configuredPhone(), SosService.defaultPhone);
+    expect(SosService.validPhone('113'), isTrue);
+    expect(SosService.validPhone('+84912345678'), isTrue);
+    expect(SosService.validPhone('113;999'), isFalse);
+    expect(SosService.validPhone(''), isFalse);
+    await expectLater(service.savePhone('113;999'), throwsFormatException);
+    await service.savePhone('115');
+    expect(await service.configuredPhone(), '115');
+  });
+
+  test('Vị trí cũ, sai hoặc yếu không tạo tin chia sẻ', () {
+    final time = DateTime.utc(2026, 11, 19, 10);
+    SosService service(SosLocation fix) => SosService(
+      clock: () => time, locationReader: () => fix);
+    SosLocation fix(double accuracy, DateTime timestamp) => SosLocation(
+      latitude: 21.271234, longitude: 106.197654,
+      accuracyMeters: accuracy, timestamp: timestamp);
+    final message = service(fix(5, time)).locationMessage();
+    expect(message, contains('21.271234, 106.197654'));
+    expect(message, contains('maps.google.com/?q=21.271234,106.197654'));
+    expect(service(fix(26, time)).locationMessage(), isNull);
+    expect(service(fix(5, time.subtract(const Duration(seconds: 16))))
+        .locationMessage(), isNull);
+    expect(service(fix(5, time.add(const Duration(seconds: 1))))
+        .locationMessage(), isNull);
+  });
+
+  testWidgets('SOS chỉ mở gọi và chia sẻ khi tài xế xác nhận',
+      (tester) async {
+    var dials = 0, shares = 0;
+    String? sent;
+    Uri? dialed;
+    final time = DateTime.utc(2026, 11, 19, 10);
+    final service = SosService(
+      dialer: (uri) async { dials++; dialed = uri; return true; },
+      sharer: (message) async { shares++; sent = message; },
+      locationReader: () => SosLocation(
+        latitude: 21.271234, longitude: 106.197654,
+        accuracyMeters: 5, timestamp: time),
+      clock: () => time,
+    );
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(body: Builder(
+        builder: (context) => TextButton(
+          onPressed: () => SosDialog.show(context, service: service),
+          child: const Text('Mở SOS'),
+        ),
+      )),
+    ));
+    await tester.tap(find.text('Mở SOS'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(find.text('SOS · Hỗ trợ khẩn cấp'), findsOneWidget);
+    expect(dials, 0);
+    expect(shares, 0);
+
+    await tester.tap(find.byKey(const Key('sos_call')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(find.text('Mở trình gọi điện?'), findsOneWidget);
+    expect(dials, 0);
+    await tester.tap(find.byKey(const Key('sos_cancel_action')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(dials, 0);
+
+    await tester.tap(find.byKey(const Key('sos_call')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.tap(find.byKey(const Key('sos_confirm_call')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(dials, 1);
+    expect(dialed!.scheme, 'tel');
+    expect(dialed!.path, '113');
+
+    await tester.tap(find.byKey(const Key('sos_share')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(find.text('Chia sẻ vị trí SOS?'), findsOneWidget);
+    expect(shares, 0);
+    await tester.tap(find.byKey(const Key('sos_confirm_share')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(shares, 1);
+    expect(sent, contains('maps.google.com/?q='));
   });
 }

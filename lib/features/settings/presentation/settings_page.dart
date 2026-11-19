@@ -6,6 +6,7 @@ import '../../../shared/glass_widgets.dart';
 import 'settings_widgets.dart';
 import 'routing_server_settings.dart';
 import '../../road_safety/speed_alert_widgets.dart';
+import '../../sos/sos_widgets.dart';
 import '../../receipt/data/vietqr_transfer_payload.dart';
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -259,6 +260,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _mapSettings(), const SizedBox(height: 11),
         const RoutingServerSettings(), const SizedBox(height: 11),
         const SpeedAlertSettings(), const SizedBox(height: 11),
+        const SosSettingsCard(), const SizedBox(height: 11),
         _tripSettings(), const SizedBox(height: 11),
         _paymentSettings(), const SizedBox(height: 11),
         _displaySettings(), const SizedBox(height: 11),

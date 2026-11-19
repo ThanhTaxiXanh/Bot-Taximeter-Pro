@@ -11,6 +11,7 @@ import '../../map_tracking/data/gps_tracker.dart';
 import '../../map_tracking/presentation/gps_permission_prompt.dart';
 import '../../map_tracking/presentation/home_widgets.dart';
 import '../../road_safety/speed_alert_widgets.dart';
+import '../../sos/sos_widgets.dart';
 import '../trip_controller.dart';
 import 'trip_map_panel.dart';
 
@@ -134,17 +135,7 @@ class _TripPageState extends State<TripPage> {
     }
   }
 
-  Future<void> _sos() => showDialog<void>(
-    context: context,
-    builder: (dialog) => AlertDialog(
-      title: const Text('SOS (bản mẫu)'),
-      content: const Text('SOS chưa gọi điện hoặc gửi vị trí.'),
-      actions: <Widget>[
-        TextButton(onPressed: () => Navigator.of(dialog).pop(),
-            child: const Text('Đã hiểu')),
-      ],
-    ),
-  );
+  Future<void> _sos() => SosDialog.show(context);
 
   Widget _map() => TripMapPanel(
     mapKey: _mapKey, is3D: _is3D, traffic: _traffic, follow: _follow,
