@@ -49,8 +49,8 @@ void main() {
     expect(tester.takeException(), isNull);
 
     await tester.tap(find.byKey(const Key('close_led_greeting')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 350));
+    // Đợi MaterialPageRoute hoàn tất animation pop trước khi đếm widget.
+    await tester.pumpAndSettle();
     expect(find.byType(LedGreetingPage), findsNothing);
     expect(find.byType(SettingsPage), findsOneWidget);
     final prefs = await SharedPreferences.getInstance();

@@ -284,3 +284,10 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - Nguyên nhân: `test/led_greeting_test.dart`, ca **LED từ Cài đặt hiển thị lời chào lưu trên máy và đóng được**, dùng `find.text('Chào mừng lên Taxi Xanh')` với `findsOneWidget`; thực tế cùng chuỗi ở ô TextField và Text LED, thành 2 widget. Đây là lỗi chọn Finder, không phải lỗi tính năng LED.
 - Sửa **chỉ bài test**: lấy `Text` bằng key `led_message`, kiểm tra `text.data` và `fontSize=120`. Giữ nguyên thao tác đóng, kiểm chứng `SharedPreferences`, không sửa mã ứng dụng.
 - Chỉ thay **1 tệp Dart** (<300 dòng) và `PROGRESS.md`; CI của commit sửa lỗi **chưa được xác minh**. **Chưa thực hiện Bước 22**, phải chờ xác nhận CI kế tiếp đạt 4/4.
+
+
+### Sửa CI #39 — đợi animation đóng màn LED (19/11/2026)
+
+- Đã đọc Issue #1 và log job của **CI #39 commit `dd345f4`**: workflow báo `success` nhưng **flutter test còn 1 ca lỗi**, các phần analyze, APK arm64 và Android 13 đều đạt. Lỗi `test/led_greeting_test.dart:54`: sau khi nhấn nút Đóng, `find.byType(LedGreetingPage)` vẫn tìm thấy 1 widget.
+- Nguyên nhân kỹ thuật: bài test chỉ `pump()` và `pump(350 ms)` trước khi kỳ vọng route đã bị dỡ; thời gian chuyển cảnh của `MaterialPageRoute` có thể khác thời gian cố định trong CI. Đổi thành `await tester.pumpAndSettle()` để chờ **toàn bộ animation pop** kết thúc rồi mới kiểm tra màn LED đã biến mất và Settings vẫn còn.
+- **Chỉ sửa 1 tệp Dart test** (không thay code ứng dụng), cập nhật `PROGRESS.md`. Không thay SOS, GPS, cước, SQLite v3, VietQR, PDF, chữ LED, package, debug signing, route, CI workflow hoặc cấu hình khác. **Chưa thực hiện Bước 22**; bắt buộc xác minh kết quả CI commit này trước.
