@@ -102,7 +102,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Bước 21 — màn hình LED chào khách** đã triển khai mã Flutter, gắn nút mở từ **Cài đặt → Giao diện**, kèm widget test và tài liệu [`docs/LED_GREETING_STEP21.md`](docs/LED_GREETING_STEP21.md). **CI #37 commit `3b6b26d` đạt 4/4** trước khi bắt đầu bước này. **Chưa xác nhận CI của commit Bước 21**; phải kiểm tra đúng SHA, và xử lý mọi lỗi trước khi bước tiếp. Bước tiếp theo đề xuất: **22 — tối ưu pin và rà soát README/chi phí Maps** sau khi người dùng yêu cầu `TIẾP TỤC` và CI Bước 21 đạt.
+**Bước 22 — tối ưu pin và rà soát Google Maps/README**: mã đã triển khai, cần chờ CI của commit mới. Điều kiện đầu vào: **CI #40 commit `c0abdce` đạt 4/4** theo Issue #1 và log jobs. Home GPS dùng chu kỳ 5 giây, bộ lọc khoảng cách 10m và tự dừng khi ứng dụng ra nền mà không có chuyến; khi có chuyến giữ GPS 1 giây/0m, foreground/wakelock và toàn bộ logic cước. Bổ sung `docs/BATTERY_MAPS_AUDIT_STEP22.md`, cập nhật `docs/GOOGLE_MAPS_SETUP.md`, `README.md`. **Bước tiếp theo đề xuất: 23 — nghiệm thu tổng thể**, chỉ khi CI Bước 22 đạt và người dùng yêu cầu `TIẾP TỤC`.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -291,3 +291,17 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - Đã đọc Issue #1 và log job của **CI #39 commit `dd345f4`**: workflow báo `success` nhưng **flutter test còn 1 ca lỗi**, các phần analyze, APK arm64 và Android 13 đều đạt. Lỗi `test/led_greeting_test.dart:54`: sau khi nhấn nút Đóng, `find.byType(LedGreetingPage)` vẫn tìm thấy 1 widget.
 - Nguyên nhân kỹ thuật: bài test chỉ `pump()` và `pump(350 ms)` trước khi kỳ vọng route đã bị dỡ; thời gian chuyển cảnh của `MaterialPageRoute` có thể khác thời gian cố định trong CI. Đổi thành `await tester.pumpAndSettle()` để chờ **toàn bộ animation pop** kết thúc rồi mới kiểm tra màn LED đã biến mất và Settings vẫn còn.
 - **Chỉ sửa 1 tệp Dart test** (không thay code ứng dụng), cập nhật `PROGRESS.md`. Không thay SOS, GPS, cước, SQLite v3, VietQR, PDF, chữ LED, package, debug signing, route, CI workflow hoặc cấu hình khác. **Chưa thực hiện Bước 22**; bắt buộc xác minh kết quả CI commit này trước.
+
+
+## Bước 22 — tối ưu pin, Google Maps và README (19/11/2026)
+
+- **Điều kiện mở bước:** Đã đọc Issue #1 và CI #40 (`c0abdce`) đúng SHA, **flutter analyze, unit/widget, build APK arm64 và Android 13 đều đạt**. Bước 21 hoàn tất kiểm thử tự động.
+- Đã đọc Master Prompt gốc `MASTER PROMPT.md` mục 3 (tránh Google API tính phí và Map ID), mục 6 (GPS foreground/wakelock), mục 10.14 (tối ưu pin, rà soát chi phí Google, README). Đối chiếu mã thực tế `SharedMapView`, `GpsTracker`, `main.dart`, `README.md` và hướng dẫn Google hiện có.
+- **Giảm tải GPS Home** trong `lib/features/map_tracking/data/gps_tracker.dart`: `GpsPowerPolicy` sử dụng `intervalDuration=5s`, `distanceFilter=10m`, `maxUpdateAge=10s`, accuracy `high` khi chỉ bật GPS xem trước; **khi chuyến đang chạy giữ nguyên** `bestForNavigation`, 1s, 0m, max age 5s, foreground notification và wakelock. Bộ lọc GPS/Haversine và fare engine không đổi.
+- **Dừng GPS xem trước khi app paused** trong `lib/main.dart` qua `WidgetsBindingObserver`, chỉ khi `isTracking=true`, không khởi động GPS, không có `tripActive` và `TripController.instance.isActive=false`. Dịch vụ GPS của chuyến không bị dừng khi app ra nền. Khi trở lại Home, người dùng có thể bật xem trước bằng chip GPS.
+- Mở rộng `test/gps_tracker_test.dart` kiểm tra cả hai profile interval/distance/age và 6 trường hợp quyết định dừng hoặc không dừng preview; không gọi GPS, mạng hay plugin Android trong CI. **3 tệp Dart có thay đổi**, mỗi file ≤300 dòng.
+- Đã soát `lib/shared/shared_map_view.dart`: dùng `google_maps_flutter`, JSON style tối/sáng, traffic và buildings từ SDK, **không mapId**; không dùng Google Directions/Places/Geocoding/Routes/Static Maps/Map Tiles hay 3D SDK. Google hiện niêm yết SKU Maps SDK miễn phí không giới hạn, **Map ID làm phát sinh Dynamic Maps SKU tính phí**. Nguồn chính thức: https://developers.google.com/maps/billing-and-pricing/pricing ; https://developers.google.com/maps/documentation/android-sdk/map-ids/get-map-id . Không cam kết hóa đơn bằng 0; giá có thể đổi.
+- Cập nhật `docs/GOOGLE_MAPS_SETUP.md`, thêm `docs/BATTERY_MAPS_AUDIT_STEP22.md`: giới hạn API key theo ứng dụng Android/package đúng `vn.bottaximeter.bot_taximeter_pro` + SHA-1 debug từ Issue #1, giới hạn chỉ Maps SDK for Android, Billing Budget Alerts, quota/giám sát theo SKU, lưu ý alert không tự ngắt phí. **Không sửa/tiết lộ key, không sửa .github/, ci/, debug signing**. Cập nhật `README.md` từ một dòng thành hướng dẫn tổng thể cho người dùng chỉ có điện thoại.
+- Không thay logic cước/làm tròn/BOT, GPS filter, SQLite v3, VietQR/PDF, SOS, LED, 7 route, Android package, signing, CI. Không thêm dependencies.
+- **Cần nghiệm thu Redmi thực tế:** so sánh GPS Home khi xem/ra nền/quay lại và GPS chuyến đang chạy khi khóa màn hình; đo pin thực tế (chưa xác nhận), đảm bảo không mất quãng đường hoặc chuyến; kiểm tra Cloud Billing/Maps API key và SHA-1 từ bản APK cài đè. **CI của commit Bước 22 chưa được xác minh** tại thời điểm ghi.
+- **Bước tiếp theo:** 23 (đề xuất nghiệm thu tổng thể), chờ `TIẾP TỤC` và CI Bước 22 4/4; sửa lỗi CI trước nếu có.

@@ -17,4 +17,34 @@ void main() {
     await gps.stop();
     expect(gps.fix, isNull);
   });
+
+  test('Chế độ Home lấy GPS thưa; chuyến đi giữ 1 giây và 0 mét', () {
+    expect(GpsPowerPolicy.interval(trip: false),
+        const Duration(seconds: 5));
+    expect(GpsPowerPolicy.distanceFilter(trip: false), 10);
+    expect(GpsPowerPolicy.maxUpdateAge(trip: false),
+        const Duration(seconds: 10));
+    expect(GpsPowerPolicy.interval(trip: true),
+        const Duration(seconds: 1));
+    expect(GpsPowerPolicy.distanceFilter(trip: true), 0);
+    expect(GpsPowerPolicy.maxUpdateAge(trip: true),
+        const Duration(seconds: 5));
+  });
+
+  test('Chỉ dừng GPS xem trước khi app vào nền và không có chuyến', () {
+    bool stop({
+      bool paused = true, bool tracking = true,
+      bool starting = false, bool tripTracking = false,
+      bool activeTrip = false,
+    }) => GpsPowerPolicy.shouldStopPreview(
+      appPaused: paused, tracking: tracking, starting: starting,
+      tripTracking: tripTracking, activeTrip: activeTrip,
+    );
+    expect(stop(), isTrue);
+    expect(stop(paused: false), isFalse);
+    expect(stop(tracking: false), isFalse);
+    expect(stop(starting: true), isFalse);
+    expect(stop(tripTracking: true), isFalse);
+    expect(stop(activeTrip: true), isFalse);
+  });
 }

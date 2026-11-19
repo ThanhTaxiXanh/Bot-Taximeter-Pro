@@ -10,6 +10,25 @@ import '../../../core/app_config.dart';
 import 'gps_filter.dart';
 import 'road_name_provider.dart';
 
+/// GPS xem trước tiết kiệm pin; khi tính cước giữ nguyên GPS 1 giây/0m.
+abstract final class GpsPowerPolicy {
+  static Duration interval({required bool trip}) =>
+      Duration(seconds: trip ? 1 : 5);
+  static int distanceFilter({required bool trip}) => trip ? 0 : 10;
+  static Duration maxUpdateAge({required bool trip}) =>
+      Duration(seconds: trip ? 5 : 10);
+
+  /// Chỉ dừng xem trước Home khi ứng dụng ra nền và KHÔNG có chuyến.
+  static bool shouldStopPreview({
+    required bool appPaused,
+    required bool tracking,
+    required bool starting,
+    required bool tripTracking,
+    required bool activeTrip,
+  }) => appPaused && tracking && !starting &&
+      !tripTracking && !activeTrip;
+}
+
 /// Vị trí thiết bị thật; không tự khởi chạy và không dùng trong CI/test.
 class GpsTracker extends ChangeNotifier {
   GpsTracker._();
@@ -81,10 +100,11 @@ class GpsTracker extends ChangeNotifier {
       _paused = false;
       final settings = Platform.isAndroid
           ? AndroidSettings(
-              accuracy: LocationAccuracy.bestForNavigation,
-              distanceFilter: 0,
-              intervalDuration: const Duration(seconds: 1),
-              maxUpdateAge: const Duration(seconds: 5),
+              accuracy: trip ? LocationAccuracy.bestForNavigation
+                  : LocationAccuracy.high,
+              distanceFilter: GpsPowerPolicy.distanceFilter(trip: trip),
+              intervalDuration: GpsPowerPolicy.interval(trip: trip),
+              maxUpdateAge: GpsPowerPolicy.maxUpdateAge(trip: trip),
               foregroundNotificationConfig: trip
                   ? const ForegroundNotificationConfig(
                       notificationTitle: 'BOT TAXIMETER PRO',
@@ -94,8 +114,9 @@ class GpsTracker extends ChangeNotifier {
                     )
                   : null,
             )
-          : const LocationSettings(
-              accuracy: LocationAccuracy.high, distanceFilter: 0,
+          : LocationSettings(
+              accuracy: LocationAccuracy.high,
+              distanceFilter: GpsPowerPolicy.distanceFilter(trip: trip),
             );
       _subscription = Geolocator.getPositionStream(
         locationSettings: settings,

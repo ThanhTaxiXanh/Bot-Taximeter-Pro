@@ -13,3 +13,10 @@ Bản đồ trong ứng dụng Android bình thường sử dụng `google_maps_
 9. Lịch sử/biên lai và preview Cài đặt vẫn dùng CustomPainter, không nạp bản đồ Google riêng, giảm map loads.
 
 **An toàn:** Không sử dụng ứng dụng để xác nhận cước/định vị thật trước khi các bước tương ứng hoàn thành. Khóa ký debug nếu ở repo public có thể bị sao chép; nên để repo private.
+
+## Bước 22 — rà soát chi phí và bảo vệ key (19/11/2026)
+
+- Theo [bảng giá Google](https://developers.google.com/maps/billing-and-pricing/pricing), **Maps SDK** cho Android hiện có mức miễn phí không giới hạn theo SKU. **Không thêm Map ID** vì Google xác nhận [Map ID có thể tạo lượt nạp Dynamic Maps SKU tính phí](https://developers.google.com/maps/documentation/android-sdk/map-ids/get-map-id).
+- Package thực tế là `vn.bottaximeter.bot_taximeter_pro` (không dùng package `vn.bottaximeter.pro` ghi ở Master Prompt cũ). Đối chiếu SHA-1 với **Issue #1 của APK mới nhất**; fingerprint minh họa của CI #40: `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`.
+- Dùng Cloud **Billing → Budgets & alerts** và kiểm tra report theo SKU. **Cảnh báo ngân sách không tự ngắt tính phí**. Kiểm tra khóa API bị giới hạn đúng Android apps + Maps SDK for Android, và tắt các API ngoài nhu cầu trong Cloud project chuyên cho ứng dụng.
+- Xem [quy trình kiểm toán và kiểm thử pin](BATTERY_MAPS_AUDIT_STEP22.md). `SharedMapView` vẫn chỉ dùng Google Maps SDK/JSON style, không có Map ID; không thay `.github/`, `ci/` hoặc `MAPS_API_KEY`.
