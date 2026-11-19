@@ -1,6 +1,6 @@
 # BỘT TAXIMETER PRO — PROGRESS
 
-Cập nhật: 18/11/2026 (giờ Việt Nam). Repo `ThanhTaxiXanh/Bot-Taximeter-Pro`, nhánh `main`.
+Cập nhật: 19/11/2026 (giờ Việt Nam). Repo `ThanhTaxiXanh/Bot-Taximeter-Pro`, nhánh `main`.
 
 ## Đã làm
 
@@ -86,6 +86,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 - **CI #16** commit `960bdf5`: 4/4 đạt. https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44284562646
 - **Bước 10 + 11:** **CI #23 đạt 4/4**, commit ứng dụng `fb5519b`: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44317231987. Đã kiểm tra trực tiếp job logs: analyzer không có warning/error (còn lint `info`), 42/42 unit/widget test đạt, APK debug arm64 được build, Android 13 smoke test 7/7 đạt. Issue #1 báo `✅ TẤT CẢ ĐẠT`: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/issues/1. APK: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/releases/tag/debug-latest
 - **Bước 12 (phần cơ sở): CI #24 đạt 4/4**, commit ứng dụng `f3d8c4b`: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44324457199. Job logs: analyzer không warning/error (lint info vẫn còn), **51/51 unit/widget test đạt**, APK debug arm64 build đạt, **Android 13 smoke 7/7 đạt**. APK: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/releases/tag/debug-latest. Chưa thử GPS thật, chưa đối chiếu nội dung đầy đủ Master Prompt Bước 12.
+- **Bước 13 (lưu lịch sử và thống kê cước GPS): CI #26 đạt 4/4**, commit mã `1a87031`: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44447984709. Log kiểm tra trực tiếp: analyzer không lỗi/warning (còn lint info), **56/56 unit/widget test đạt**, APK debug arm64 đạt, **Android 13 8/8 integration đạt**, trong đó 7 smoke chuẩn + 1 SQLite native. APK: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/releases/tag/debug-latest. Chưa kiểm tra upgrade v1→v2/SQLite trên Redmi có dữ liệu cũ và chưa đối chiếu Master Prompt đầy đủ.
 - SHA-1 debug: `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`.
 
 ## Cần thử trên điện thoại
@@ -99,7 +100,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Ưu tiên hiện tại:** Người dùng đã yêu cầu tiếp tục; đang triển khai Bước 13 (lưu lịch sử chuyến, thống kê cước GPS thực từ SQLite). Chỉ xác nhận khi CI mới đạt analyzer, test, APK và smoke Android 13. Vẫn cần thử migration SQLite trên Redmi và đối chiếu Master Prompt gốc trước khi xác nhận toàn bộ phạm vi Bước 13.
+**Ưu tiên hiện tại:** Bước 13 phần lưu lịch sử/thu nhập tham khảo đã được triển khai và **CI #26 đạt 4/4**. Tiếp theo thử nâng cấp dữ liệu SQLite v1→v2 trên Redmi Note 12 Pro mà không gỡ APK, kiểm tra khôi phục chuyến cũ và đọc lịch sử sau đóng/mở ứng dụng. Chưa đối chiếu được Master Prompt gốc; **không khẳng định toàn bộ phạm vi Bước 13 đã hoàn tất**. Không triển khai Bước 14 trước khi người dùng yêu cầu.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -121,11 +122,11 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 - Test mới: `test/speed_alert_engine_test.dart`, `test/speed_alert_widgets_test.dart`; CI dùng GPS/SharedPreferences giả lập, không có Google Maps API key.
 - Hướng dẫn và giới hạn tại `docs/SPEED_ALERT_SETUP.md`. **CI #24 đã xác nhận phần cơ sở 4/4 đạt. Chưa xác nhận toàn bộ Bước 12 khi chưa đối chiếu Master Prompt gốc và chưa thử thực địa trên Redmi.**
 
-## Bước 13 — đang triển khai, chờ CI
+## Bước 13 — lưu lịch sử/thu nhập tham khảo đã triển khai, CI #26 đạt 4/4
 
 - `TaximeterDatabase` nâng `bot_taximeter.db` từ v1 lên v2, thêm `completed_trips` và chỉ mục thời gian, giữ nguyên `trip_snapshots` để khôi phục chuyến cũ.
 - `TripController.complete()` ghi một `CompletedTrip` idempotent theo ID bắt đầu chuyến trước khi xóa snapshot. Lưu lỗi thì giữ snapshot, tài xế có thể thử lại. Không ghi chuyến khi Bỏ chuyến cũ.
 - `HistoryPage` thay doanh thu mẫu bằng số liệu từ `CompletedTripStore`, lọc hôm nay/7 ngày/30 ngày và vẽ biểu đồ 7 ngày. Không nhận tiền thật, không suy đoán dữ liệu thanh toán.
 - Biên lai đọc bản ghi thực với ID, mốc thời gian, km, phút chờ, BOT và cước GPS; các trường chưa có ghi “Chưa ghi nhận” thay vì hiển thị dữ liệu khách mẫu.
 - `test/completed_trip_store_test.dart`, `test/history_page_test.dart` mới và `integration_test/completed_history_test.dart` kiểm tra SQLite native trên máy ảo; giữ nguyên smoke test chuẩn.
-- Hướng dẫn thử an toàn và giới hạn tại `docs/HISTORY_STORAGE.md`. **Chưa có kết quả CI cho commit Bước 13 và chưa thử nâng cấp SQLite trực tiếp trên Redmi.** File Master Prompt gốc vẫn chưa có trong repository.
+- Hướng dẫn thử an toàn và giới hạn tại `docs/HISTORY_STORAGE.md`. **CI #26 đã xác nhận 56/56 unit/widget test, APK arm64, 8/8 integration Android 13 (gồm SQLite native).** Chưa thử nâng cấp SQLite v1→v2 trực tiếp trên Redmi, chưa xác nhận thanh toán thật/PDF, và vẫn thiếu Master Prompt gốc để đối chiếu phạm vi.
