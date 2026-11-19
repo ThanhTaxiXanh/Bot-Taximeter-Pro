@@ -44,6 +44,13 @@ void main() {
     await tester.pump();
     expect(find.byType(QrImageView), findsNothing);
     expect(find.text('Phương thức thanh toán'), findsOneWidget);
+    final export = find.text('Xuất PDF');
+    await tester.ensureVisible(export);
+    await tester.pump();
+    await tester.tap(export);
+    await tester.pump();
+    expect(find.textContaining('Chỉ xuất PDF cho chuyến đã lưu'),
+        findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

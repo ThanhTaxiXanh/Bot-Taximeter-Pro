@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:printing/printing.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/app_shell.dart';
 import '../../../shared/glass_widgets.dart';
 import 'receipt_widgets.dart';
+import '../data/receipt_pdf_service.dart';
 
 /// Màn biên lai theo ảnh mẫu. Không xác nhận thanh toán thật.
 class ReceiptPage extends StatefulWidget {
@@ -20,6 +22,7 @@ class ReceiptPage extends StatefulWidget {
 class _ReceiptPageState extends State<ReceiptPage> {
   bool _transfer = true;
   bool _is3D = true;
+  bool _pdfBusy = false;
   String _bank = '';
   String _owner = '';
   String _account = '';
@@ -56,9 +59,29 @@ class _ReceiptPageState extends State<ReceiptPage> {
     SnackBar(content: Text(message)),
   );
 
-  void _unsupported(String title) => _notice(
-    '$title sẽ được triển khai ở Bước 13; chưa tạo tệp thật.',
-  );
+  /// Chỉ thao tác khi tài xế chủ động bấm; không tự lưu/chia sẻ dữ liệu.
+  Future<void> _outputPdf({required bool print}) async {
+    if (_pdfBusy) return;
+    if (!_recorded) {
+      _notice('Chỉ xuất PDF cho chuyến đã lưu. Đây là biên lai mẫu.');
+      return;
+    }
+    setState(() => _pdfBusy = true);
+    try {
+      final data = ReceiptPdfData.fromSnapshot(widget.snapshot);
+      final pdf = await const ReceiptPdfService().generate(data);
+      if (print) {
+        await Printing.layoutPdf(
+          name: data.filename, onLayout: (_) async => pdf);
+      } else {
+        await Printing.sharePdf(bytes: pdf, filename: data.filename);
+      }
+    } catch (_) {
+      if (mounted) _notice('Không thể tạo hoặc mở PDF trên thiết bị.');
+    } finally {
+      if (mounted) setState(() => _pdfBusy = false);
+    }
+  }
 
   Widget _receiptDetails() => GlassCard(
     selected: true,
@@ -179,17 +202,17 @@ class _ReceiptPageState extends State<ReceiptPage> {
   Widget _buttons() => Row(children: <Widget>[
     Expanded(child: NeonButton(
       label: 'In biên lai', icon: Icons.print, primary: false,
-      onPressed: () => _unsupported('In biên lai'),
+      onPressed: () => _outputPdf(print: true),
     )),
     const SizedBox(width: 6),
     Expanded(child: NeonButton(
       label: 'Chia sẻ', icon: Icons.share, primary: false,
-      onPressed: () => _unsupported('Chia sẻ'),
+      onPressed: () => _outputPdf(print: false),
     )),
     const SizedBox(width: 6),
     Expanded(child: NeonButton(
       label: 'Xuất PDF', icon: Icons.picture_as_pdf, primary: false,
-      onPressed: () => _unsupported('Xuất PDF'),
+      onPressed: () => _outputPdf(print: false),
     )),
   ]);
 
@@ -228,6 +251,11 @@ class _ReceiptPageState extends State<ReceiptPage> {
         ],
         const SizedBox(height: 12),
         _buttons(),
+        if (_pdfBusy) const LinearProgressIndicator(),
+        if (_recorded)
+          const Text('Xuất PDF mở bảng chia sẻ để lưu vào thiết bị. '
+              'Biên lai không phải hóa đơn hoặc xác nhận đã thanh toán.',
+              style: TextStyle(color: AppColors.muted, fontSize: 11)),
         const SizedBox(height: 8),
       ],
     ),

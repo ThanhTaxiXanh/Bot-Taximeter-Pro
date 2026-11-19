@@ -100,7 +100,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Ưu tiên hiện tại:** Bước 13 phần lưu lịch sử/thu nhập tham khảo đã được triển khai và **CI #26 đạt 4/4**. Tiếp theo thử nâng cấp dữ liệu SQLite v1→v2 trên Redmi Note 12 Pro mà không gỡ APK, kiểm tra khôi phục chuyến cũ và đọc lịch sử sau đóng/mở ứng dụng. Chưa đối chiếu được Master Prompt gốc; **không khẳng định toàn bộ phạm vi Bước 13 đã hoàn tất**. Không triển khai Bước 14 trước khi người dùng yêu cầu.
+**Ưu tiên hiện tại:** Người dùng đã yêu cầu tiếp tục sau Bước 13. Đang triển khai **Bước 14, phần biên lai PDF**, gồm in/chia sẻ/xuất PDF chỉ cho chuyến đã lưu, không tự xác nhận thanh toán. Chờ CI mới kiểm chứng và thử trên Redmi. Chưa có Master Prompt gốc để đối chiếu toàn bộ phạm vi Bước 14; không triển khai Bước 15 trước khi người dùng yêu cầu.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -130,3 +130,11 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 - Biên lai đọc bản ghi thực với ID, mốc thời gian, km, phút chờ, BOT và cước GPS; các trường chưa có ghi “Chưa ghi nhận” thay vì hiển thị dữ liệu khách mẫu.
 - `test/completed_trip_store_test.dart`, `test/history_page_test.dart` mới và `integration_test/completed_history_test.dart` kiểm tra SQLite native trên máy ảo; giữ nguyên smoke test chuẩn.
 - Hướng dẫn thử an toàn và giới hạn tại `docs/HISTORY_STORAGE.md`. **CI #26 đã xác nhận 56/56 unit/widget test, APK arm64, 8/8 integration Android 13 (gồm SQLite native).** Chưa thử nâng cấp SQLite v1→v2 trực tiếp trên Redmi, chưa xác nhận thanh toán thật/PDF, và vẫn thiếu Master Prompt gốc để đối chiếu phạm vi.
+
+## Bước 14 — đang triển khai phần biên lai PDF, chưa nghiệm thu
+
+- `receipt_pdf_service.dart` tạo PDF A4 offline từ `ReceiptPdfData` chuyến đã lưu Bước 13; không cho xuất bản mẫu. Dựng chữ Việt bằng Flutter Canvas thành ảnh trước khi chèn PDF để tránh tải font từ mạng. Nội dung PDF là ảnh, không tìm kiếm được văn bản.
+- `ReceiptPage`: **In biên lai** gọi hộp thoại in Android; **Chia sẻ** và **Xuất PDF** gọi trình chia sẻ/lưu tệp Android qua package `printing`. Không tự xác nhận đã lưu, in hoặc gửi file; thao tác chỉ phát sinh khi tài xế bấm. Không in/đưa VietQR demo thành thanh toán thật.
+- Mỗi biên lai PDF ghi “CƯỚC GPS THAM KHẢO”, “KHÔNG PHẢI HÓA ĐƠN · CHƯA KIỂM ĐỊNH”; không thu thập thêm số điện thoại, địa chỉ khách hay trạng thái thanh toán.
+- Bổ sung `pdf: 3.13.1` và `printing: 5.15.0` vào pubspec, `test/receipt_pdf_test.dart` và `integration_test/receipt_pdf_test.dart`. Giữ nguyên CI, smoke test chuẩn, package Android và SHA-1.
+- Hướng dẫn thử: `docs/RECEIPT_PDF.md`. **Chưa có CI của Bước 14, chưa thử xuất/in PDF trên Redmi; chưa đối chiếu Master Prompt gốc để xác định toàn bộ phạm vi.**
