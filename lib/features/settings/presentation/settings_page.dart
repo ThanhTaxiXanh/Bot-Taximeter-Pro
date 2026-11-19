@@ -6,6 +6,7 @@ import '../../../shared/glass_widgets.dart';
 import 'settings_widgets.dart';
 import 'routing_server_settings.dart';
 import '../../road_safety/speed_alert_widgets.dart';
+import '../../receipt/data/vietqr_transfer_payload.dart';
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
   @override
@@ -15,6 +16,7 @@ class _SettingsPageState extends State<SettingsPage> {
   final _bank = TextEditingController();
   final _owner = TextEditingController();
   final _account = TextEditingController();
+  final _bankBin = TextEditingController();
   final _greeting = TextEditingController(text: 'Xin chào quý khách!');
   final _fareFields = <TextEditingController>[
     TextEditingController(text: '30000'), TextEditingController(text: '13000'),
@@ -25,6 +27,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _is3D = true, _follow = true, _dark = true, _traffic = true;
   bool _roads = true, _auto3D = true, _sound = true, _jam = true;
   bool _vibration = true, _simple = false, _transfer = false;
+  bool _realVietQr = false;
   bool _ready = false, _saving = false;
   double _tilt = 60;
   String _vehicle = 'Ô tô con', _area = 'Tự động', _fontSize = 'Vừa';
@@ -38,6 +41,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _bank.dispose();
     _owner.dispose();
     _account.dispose();
+    _bankBin.dispose();
     _greeting.dispose();
     for (final field in _fareFields) { field.dispose(); }
     super.dispose();
@@ -58,6 +62,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _vibration = p.getBool('alert_vibration') ?? true;
         _simple = p.getBool('simple_mode') ?? false;
         _transfer = p.getBool('default_transfer') ?? false;
+        _realVietQr = p.getBool('vietqr_real_enabled') ?? false;
         _tilt = (p.getDouble('map_tilt') ?? 60).clamp(15, 80).toDouble();
         _vehicle = p.getString('vehicle_type') ?? 'Ô tô con';
         _area = p.getString('road_area') ?? 'Tự động';
@@ -65,6 +70,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _bank.text = p.getString('bank_name') ?? '';
         _owner.text = p.getString('bank_owner') ?? '';
         _account.text = p.getString('bank_account') ?? '';
+        _bankBin.text = p.getString('vietqr_bank_bin') ?? '';
         _greeting.text = p.getString('led_greeting') ?? 'Xin chào quý khách!';
         const keys = <String>['fare_opening','fare_tier1','fare_tier2',
             'fare_tier3','fare_wait_hour','fare_free_wait'];
@@ -93,6 +99,12 @@ class _SettingsPageState extends State<SettingsPage> {
       _notice('Biểu phí không hợp lệ; nhập số nguyên không âm.');
       return;
     }
+    if (_realVietQr && (!VietQrTransferPayload.validRecipient(
+        _bankBin.text, _account.text) || _owner.text.trim().isEmpty)) {
+      _notice('VietQR cần BIN ngân hàng 6 chữ số, tài khoản '
+          '6–19 chữ số và tên người nhận. Vui lòng kiểm tra lại.');
+      return;
+    }
     setState(() => _saving = true);
     try {
       final p = await SharedPreferences.getInstance();
@@ -104,6 +116,8 @@ class _SettingsPageState extends State<SettingsPage> {
         p.setBool('alert_vibration', _vibration),
         p.setBool('simple_mode', _simple),
         p.setBool('default_transfer', _transfer),
+        p.setBool('vietqr_real_enabled', _realVietQr),
+        p.setString('vietqr_bank_bin', _bankBin.text.trim()),
         p.setDouble('map_tilt', _tilt),
         p.setString('vehicle_type', _vehicle),
         p.setString('road_area', _area),
@@ -133,6 +147,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _is3D = true; _follow = true; _dark = true; _traffic = true;
     _roads = true; _auto3D = true; _sound = true; _jam = true;
     _vibration = true; _simple = false; _transfer = false;
+    _realVietQr = false; _bankBin.clear();
     _tilt = 60; _vehicle = 'Ô tô con'; _area = 'Tự động';
     _fontSize = 'Vừa'; _bank.clear(); _owner.clear(); _account.clear();
     _greeting.text = 'Xin chào quý khách!';
@@ -203,13 +218,21 @@ class _SettingsPageState extends State<SettingsPage> {
       SettingsField(label: 'Ngân hàng', controller: _bank,
           hint: 'Chưa cấu hình'),
       SettingsField(label: 'Chủ tài khoản', controller: _owner),
-      SettingsField( label: 'Số tài khoản', controller: _account, keyboardType: TextInputType.number,
-      ),
-      SettingsToggle(
-        title: 'QR chuyển khoản mặc định', subtitle: 'Chỉ điều chỉnh giao diện QR mẫu ở Bước 7', icon: Icons.qr_code, value: _transfer, onChanged: (v) => setState(() => _transfer = v),
-      ),
-      const Text('VietQR thanh toán thật sẽ được tích hợp ở Bước 13. '
-          'Không nhập mật khẩu hay mã OTP.',
+      SettingsField(label: 'Số tài khoản', controller: _account,
+          keyboardType: TextInputType.number),
+      SettingsField(label: 'BIN ngân hàng (6 số)', controller: _bankBin,
+          keyboardType: TextInputType.number, hint: 'Ví dụ: 9704xx'),
+      SettingsToggle(title: 'QR chuyển khoản mặc định',
+        subtitle: 'Hiển thị mục chuyển khoản trên biên lai',
+        icon: Icons.qr_code, value: _transfer,
+        onChanged: (v) => setState(() => _transfer = v)),
+      SettingsToggle(title: 'Cho phép tạo VietQR chuyển khoản',
+        subtitle: 'Mặc định TẮT. Chỉ dùng cho chuyến đã lưu.',
+        icon: Icons.verified_user_outlined, value: _realVietQr,
+        onChanged: (v) => setState(() => _realVietQr = v)),
+      const Text('Chỉ nhập tài khoản nhận tiền của bạn. Kiểm tra BIN '
+          'và chủ tài khoản bằng ứng dụng ngân hàng trước khi sử dụng. '
+          'Không nhập mật khẩu hoặc OTP. QR không xác nhận đã thu tiền.',
           style: TextStyle(color: AppColors.muted, fontSize: 11)),
     ],
   );

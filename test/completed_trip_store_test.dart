@@ -34,6 +34,7 @@ void main() {
     expect(decoded.distanceMeters, 2000);
     expect(decoded.waitingSeconds, 60);
     expect(decoded.receiptSnapshot['isRecorded'], 'true');
+    expect(decoded.receiptSnapshot['amountVnd'], '60000');
     expect(decoded.receiptSnapshot['payment'], isNull);
     expect(decoded.receiptSnapshot['pickup'], isNull);
   });

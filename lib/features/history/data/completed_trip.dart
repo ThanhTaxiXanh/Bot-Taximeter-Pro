@@ -46,6 +46,7 @@ class CompletedTrip {
   Map<String, String> get receiptSnapshot => <String, String>{
     'id': id,
     'fare': formatVnd(fareVnd),
+    'amountVnd': '$fareVnd',
     'distance': formatKm(distanceMeters / 1000),
     'duration': formatDuration(elapsedSeconds),
     'waiting': formatDuration(waitingSeconds),

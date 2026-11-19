@@ -8,6 +8,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../shared/app_shell.dart';
 import '../../../shared/glass_widgets.dart';
 import 'receipt_widgets.dart';
+import 'receipt_transfer_panel.dart';
 import '../data/receipt_pdf_service.dart';
 
 /// Màn biên lai theo ảnh mẫu. Không xác nhận thanh toán thật.
@@ -247,7 +248,8 @@ class _ReceiptPageState extends State<ReceiptPage> {
         _paymentSelector(),
         if (_transfer) ...<Widget>[
           const SizedBox(height: 10),
-          DemoVietQrPanel(bank: _bank, owner: _owner, account: _account),
+          ReceiptTransferPanel(snapshot: widget.snapshot,
+              bank: _bank, owner: _owner, account: _account),
         ],
         const SizedBox(height: 12),
         _buttons(),

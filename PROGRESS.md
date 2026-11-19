@@ -101,7 +101,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Ưu tiên hiện tại:** Phần biên lai PDF của Bước 14 đã triển khai và **CI #28 đạt 4/4**. Tiếp theo kiểm tra xuất PDF/chia sẻ/in trên Redmi Note 12 Pro (giữ SQLite cũ bằng cài đè APK), và đối chiếu Master Prompt gốc trước khi xác nhận toàn bộ phạm vi Bước 14. Chưa triển khai VietQR nhận tiền thật hay Bước 15.
+**Ưu tiên hiện tại:** Người dùng đã yêu cầu tiếp tục sau Bước 14. Đang triển khai **phần cơ sở Bước 15: tạo mã yêu cầu chuyển khoản VietQR offline**, mặc định tắt, chỉ cho chuyến SQLite đã lưu và có xác nhận hiển thị QR của tài xế. Cần CI mới xác nhận analyzer/unit/widget/APK/Android smoke. Không tự xác nhận đã nhận tiền và chưa có Master Prompt gốc để xác định đầy đủ phạm vi Bước 15; không triển khai Bước 16 trước khi có yêu cầu.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -139,3 +139,12 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 - Mỗi biên lai PDF ghi “CƯỚC GPS THAM KHẢO”, “KHÔNG PHẢI HÓA ĐƠN · CHƯA KIỂM ĐỊNH”; không thu thập thêm số điện thoại, địa chỉ khách hay trạng thái thanh toán.
 - Bổ sung `pdf: 3.13.1` và `printing: 5.15.0` vào pubspec, `test/receipt_pdf_test.dart` và `integration_test/receipt_pdf_test.dart`. Giữ nguyên CI, smoke test chuẩn, package Android và SHA-1.
 - Hướng dẫn thử: `docs/RECEIPT_PDF.md`. **CI #28 commit `88b5a98` đạt đủ analyzer, 58/58 unit/widget, APK arm64 và Android 13 9/9 integration (7 smoke chuẩn, 1 SQLite native, 1 PDF offline).** Chưa thử xuất/in/chia sẻ trên Redmi; chưa đối chiếu Master Prompt gốc để xác định toàn bộ phạm vi Bước 14.
+
+## Bước 15 — đang triển khai phần mã chuyển khoản, chưa nghiệm thu
+
+- Tham khảo cấu trúc VietQR/NAPAS247 và EMVCo: `vietqr_transfer_payload.dart` tạo payload TLV với ngân hàng BIN 6 chữ số, số tài khoản, số tiền VND và CRC16/CCITT-FALSE; không gọi API, không gửi thông tin đến ngân hàng, không tạo giao dịch tự động.
+- `SettingsPage` có ô BIN ngân hàng và cờ **Cho phép tạo VietQR chuyển khoản** mặc định **TẮT**. Bật chỉ khi BIN, số tài khoản và tên người nhận hợp lệ ở mức kiểm tra định dạng. Không tự khẳng định ngân hàng/tài khoản đã được xác minh.
+- `CompletedTrip.receiptSnapshot` có `amountVnd` nguyên gốc từ SQLite; không suy đoán tiền bằng cách parse chữ cước. `ReceiptTransferPanel` chỉ tạo QR sau thao tác **Hiển thị QR chuyển khoản** trên một chuyến đã lưu. Biên lai mẫu vẫn hiện mã DEMO và không tạo QR chuyển tiền.
+- QR chuyển khoản **không** xác nhận đã thanh toán, không sửa dữ liệu doanh thu, không xuất hóa đơn hay lưu mật khẩu/OTP. Tài xế phải xác minh tiền vào bằng kênh ngân hàng riêng.
+- Kiểm thử mới: `test/vietqr_transfer_test.dart`, `test/vietqr_panel_test.dart`, mở rộng `test/completed_trip_store_test.dart`; hướng dẫn `docs/VIETQR_TRANSFER.md`.
+- **Chưa có kết quả CI cho phần VietQR và chưa thử quét trên Redmi.** Thiếu `MASTER PROMPT.md` gốc trong repository/tệp dự án nên chưa thể gọi toàn bộ Bước 15 hoàn tất.
