@@ -49,10 +49,9 @@ void main() {
     await tester.pump();
     await tester.tap(button);
     await tester.pump();
-    final qr = tester.widget<QrImageView>(
-        find.byKey(const Key('real_vietqr_qr')));
-    expect(qr.data, contains('540572000'));
-    expect(qr.data, contains('QRIBFTTA'));
+    expect(find.byKey(const Key('real_vietqr_qr')), findsOneWidget);
+    expect(find.byType(QrImageView), findsOneWidget);
+    // Nội dung TLV và CRC đã được kiểm tra trong vietqr_transfer_test.dart.
     expect(find.textContaining('KHÔNG kiểm tra'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
