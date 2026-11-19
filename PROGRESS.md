@@ -102,7 +102,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Ưu tiên hiện tại:** Đã tiếp nhận xác nhận kiểm thử thực địa 5/5 của người dùng trên Redmi Note 12 Pro; CI tham chiếu vẫn là #30 (commit ứng dụng `2ec236b`, 66/66 unit/widget, APK arm64, 9/9 Android 13). Đã đọc `MASTER PROMPT.md` trong tệp của Project ChatGPT; tài liệu này **chưa thấy ở gốc repository GitHub** tại thời điểm đối chiếu. Lộ trình gốc tại mục 10 chỉ có **14 bước**, không định nghĩa Bước 15 hoặc 16. Việc triển khai tiếp theo phải được người dùng xác định rõ phạm vi, không tự mở Bước 16. Các mục cần đối chiếu chi tiết ghi ở phần cuối tài liệu.
+**Ưu tiên hiện tại:** **Bước 16 kiểm toán khoảng trống đã thực hiện trên mã nguồn**; chi tiết tại [`docs/FEATURE_GAP_AUDIT_2026-11-19.md`](docs/FEATURE_GAP_AUDIT_2026-11-19.md). Master Prompt gốc mục 10 chỉ có 14 bước; Bước 17 trở đi là đề xuất chia nhỏ để khắc phục khoảng trống, không phải bước đã được Master Prompt định nghĩa. Ưu tiên tiếp theo đề xuất: xây nền quy tắc tốc độ pháp lý (G01) sau khi xác minh văn bản còn hiệu lực; không kích hoạt báo tốc độ pháp lý khi chưa bảo đảm nguồn dữ liệu. Giữ nguyên CI #30 là mốc mã đã kiểm chứng và 5/5 thử nghiệm Redmi do người dùng xác nhận. **Chờ lệnh TIẾP TỤC để triển khai tính năng, không tự sửa mã.**
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -182,3 +182,13 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - File `MASTER PROMPT.md` đã có trong tệp của Project ChatGPT và được đọc để đối chiếu, nhưng **chưa được tìm thấy trong thư mục gốc của repository GitHub** khi kiểm tra `main`.
 
 **Kết luận:** Ghi nhận Bước 15 phần cơ sở đã đạt CI và 5/5 thử nghiệm thủ công được báo cáo. Chưa xác nhận toàn bộ phạm vi Master Prompt gốc. **Dừng ở mốc bàn giao Bước 15; không triển khai Bước 16 nếu chưa có lệnh “TIẾP TỤC” và phạm vi được chốt.** Cước GPS vẫn chỉ mang tính tham khảo, chưa được kiểm định pháp lý.
+
+
+## Bước 16 — kiểm toán khoảng trống (19/11/2026)
+
+- Đã đối chiếu Master Prompt gốc trong Project ChatGPT với cây nguồn GitHub `main` và các file mã/CI hiện hành.
+- Biên bản chi tiết: [`docs/FEATURE_GAP_AUDIT_2026-11-19.md`](docs/FEATURE_GAP_AUDIT_2026-11-19.md); 12 nhóm khoảng trống/chưa xác minh, chia P0/P1/P2.
+- P0: quy tắc giới hạn tốc độ pháp lý (mục 6B) còn thiếu; SOS hiện là hộp thoại bản mẫu, chưa có lệnh gọi hoặc gửi vị trí.
+- P1: dẫn đường GPS trực tiếp, dữ liệu ngân hàng BIN cache/seed, LED toàn màn hình, SQLite chuyến chi tiết.
+- P2: giọng nói, lưu tuyến, thống kê so sánh, cảnh báo kẹt xe, hoàn thiện README và kiểm toán chi phí Maps.
+- Mã và CI **không thay đổi**. Bước 17 chỉ là **đề xuất**; chờ yêu cầu `TIẾP TỤC`.
