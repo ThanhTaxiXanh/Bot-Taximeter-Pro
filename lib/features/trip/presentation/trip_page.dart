@@ -100,6 +100,10 @@ class _TripPageState extends State<TripPage> {
     } else { _controller.addToll(result); }
   }
 
+  String _clock(int seconds) =>
+      '${(seconds ~/ 60).toString().padLeft(2, '0')}:'
+      '${(seconds % 60).toString().padLeft(2, '0')}';
+
   Future<void> _finish() async {
     final confirmed = await showDialog<bool>(
       context: context,
