@@ -232,7 +232,14 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - Thêm `lib/features/sos/sos_service.dart`: kiểm tra số điện thoại (không chấp nhận dấu lệnh/URL), lưu `sos_phone` vào `SharedPreferences`, mở `tel:` bằng `url_launcher` ở chế độ externalApplication, mở bảng chia sẻ vị trí bằng `share_plus`; không dùng `CALL_PHONE`. Chỉ đọc fix GPS đã lọc, không cho dữ liệu mock, quá 15 giây hoặc độ chính xác >25m; không thu thập lịch sử GPS mới.
 - Thêm `lib/features/sos/sos_widgets.dart`: hộp thoại SOS với nút Gọi và Chia sẻ vị trí **mỗi nút có xác nhận phụ riêng**, xử lý không có GPS/ứng dụng hỗ trợ; `SosSettingsCard` lưu số SOS riêng trong Cài đặt.
 - Chỉ sửa `trip_page.dart` để nút SOS mở chức năng thật; `settings_page.dart` để hiện cấu hình SOS; `test/trip_page_test.dart` kiểm tra không thực hiện khi chưa xác nhận, xử lý GPS cũ/yếu, số hợp lệ và test bằng backend giả không gọi plugin trong CI.
-- `pubspec.yaml` thêm chính xác `url_launcher: 6.3.3` và `share_plus: 11.1.0`; chọn share_plus 11.1.0 để tránh tăng yêu cầu AGP/Kotlin của nhánh 12+ khi build Android trên CI. `docs/SOS_STEP19.md` ghi cách thử an toàn khi xe đứng yên.
+- `pubspec.yaml` thêm chính xác `url_launcher: 6.3.3` và `share_plus: 13.3.1`; CI #34 phát hiện share_plus 11.1.0 xung đột `win32 ^5.5.3` với `wakelock_plus 1.8.0` (`win32 ^6.0.1`); đã sửa thành share_plus 13.3.1 để giải quyết dependency mà không đổi wakelock hay CI. `docs/SOS_STEP19.md` ghi cách thử an toàn khi xe đứng yên.
 - Giữ nguyên package Android, debug keystore, CI, 7 route, cước/BOT/chờ, SQLite, PDF/VietQR, Maps và module tốc độ. **Chỉ có 5 tệp Dart** liên quan, mỗi tệp dưới 300 dòng.
 - **CI cho commit Bước 19 chưa được kiểm chứng tại thời điểm commit.** Không tuyên bố SOS đã thử với trình gọi/ứng dụng chia sẻ thực trên Redmi khi chưa có nghiệm thu thiết bị.
 - **Bước tiếp theo: 20**, danh sách/cache ngân hàng VietQR (đề xuất), chờ người dùng `TIẾP TỤC` sau khi xem CI Bước 19.
+
+
+### Sửa phụ thuộc CI #34 của Bước 19 (19/11/2026)
+
+- **CI #34 commit `9773e2d` chưa đạt:** trong bước `flutter create`/pub resolution, `share_plus 11.1.0` phụ thuộc `win32 ^5.5.3`, còn `wakelock_plus 1.8.0` phụ thuộc `win32 ^6.0.1`. Các bước analyze/test/build/Android integration chưa chạy, không có APK mới từ #34.
+- Chỉ đổi `pubspec.yaml`: `share_plus: 11.1.0` → **`share_plus: 13.3.1`**, phiên bản yêu cầu `win32` 6; vẫn dùng `url_launcher: 6.3.3` và `wakelock_plus: 1.8.0`.
+- Cập nhật `docs/SOS_STEP19.md` và `PROGRESS.md` cho đúng thực tế, **không** thay mã SOS, GPS/cước, SQLite/PDF/VietQR, package Android, debug keystore hoặc workflow. CI của commit sửa phụ thuộc **chưa được xác minh**.

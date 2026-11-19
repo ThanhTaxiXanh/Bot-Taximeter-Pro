@@ -12,14 +12,14 @@
 
 ## Thư viện và tương thích build
 
-- `url_launcher: 6.3.3` cho `tel:`; `share_plus: 11.1.0` cho bảng chia sẻ Android. Đã tham khảo tài liệu package pub.dev; chọn `share_plus` nhánh 11 do nhánh 12+ đòi AGP >=8.12.1/Kotlin 2.2.0, không tự thay workflow GitHub Actions.
+- `url_launcher: 6.3.3` cho `tel:`; `share_plus: 13.3.1` cho bảng chia sẻ Android. Đã tham khảo tài liệu package pub.dev. CI #34 chứng minh `share_plus 11.1.0` xung đột phụ thuộc `win32 ^5.5.3` với `wakelock_plus 1.8.0` (`win32 ^6.0.1`). Dùng `share_plus 13.3.1` (win32 6) và giữ nguyên `wakelock_plus`/workflow; bộ Android do Flutter 3.50 tạo mới đáp ứng yêu cầu AGP/Kotlin phiên bản mới. Phải kiểm chứng bằng CI thực tế.
 - Không tạo AndroidManifest thủ công; repo dùng `ci/scripts/prepare_android.sh` sinh `android/` khi CI chạy. SOS không cần quyền CALL_PHONE, chỉ cần khả năng mở dialer ở Android. Không dùng `canLaunchUrl` để tránh yêu cầu Android query thừa.
 - Dữ liệu chỉ có trong nội dung chia sẻ khi người dùng đồng ý. Không tự gửi SMS/email, không lưu lịch sử tọa độ trong SQLite/SharedPreferences và không gọi thêm API bản đồ để lấy vị trí.
 
 ## Kiểm thử
 
 - Unit/widget: `test/trip_page_test.dart` xác nhận số mặc định 113, định dạng số hợp lệ, đổi/lưu số SOS, từ chối GPS yếu/cũ, không thực hiện khi chưa xác nhận, gọi `tel:`/chia sẻ qua backend giả khi đã xác nhận.
-- CI #33 trước bước này **đạt 4/4**. CI của Bước 19 chỉ được xác nhận khi Issue #1 và log tại đúng commit cho kết quả analyzer, flutter test, APK và Android 13 đạt.
+- CI #33 trước bước này **đạt 4/4**. CI #34 của commit ban đầu thất bại ngay `flutter create` do xung đột dependency; CI chạy lại sau bản sửa mới chỉ được xác nhận khi Issue #1 và log tại đúng commit cho kết quả analyzer, flutter test, APK và Android 13 đạt.
 - Kiểm thử thật **chỉ khi xe đỗ**: cài APK đè không xóa dữ liệu, nhập số điện thoại thử nghiệm của chính mình (không gọi số khẩn cấp thật chỉ để test), mở trình gọi rồi thoát mà không thực hiện cuộc gọi; thử chia sẻ tọa độ đến một cuộc hội thoại riêng nhưng không bấm gửi. Không gọi số 113 trừ khi thật sự có tình huống khẩn cấp.
 
 ## Giới hạn
