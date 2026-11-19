@@ -102,7 +102,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Ưu tiên hiện tại:** Bước 17 triển khai dữ liệu và engine giới hạn tốc độ theo Điều 6 Thông tư 38/2024/TT-BGTVT, tham khảo bản hợp nhất 74/2026/VBHN-TT-BXD. Chi tiết [`docs/SPEED_LIMIT_LEGAL_BASE_2026-11-19.md`](docs/SPEED_LIMIT_LEGAL_BASE_2026-11-19.md). Chưa nối cảnh báo/UI; không tự áp giới hạn khi thiếu biển/ngữ cảnh. CI của commit Bước 17 **chưa xác minh** (mốc trước: CI #30 đạt). **Bước tiếp theo: 18**, chỉ làm khi người dùng gõ TIẾP TỤC.
+**Ưu tiên hiện tại:** Bước 18 tích hợp biển giới hạn tốc độ nguồn xác minh và OSM chỉ-tham-khảo trên Home/Trip thật; UI mock CI giữ nguyên. Cảnh báo **chỉ trực quan**, không tự xác nhận biển pháp lý từ OSM, không rung/âm thanh. Tài liệu: [`docs/SPEED_LIMIT_STEP18.md`](docs/SPEED_LIMIT_STEP18.md). **CI #31 cho Bước 17 đã đạt 4/4**, CI của commit Bước 18 **chưa xác minh**. Bước tiếp theo **19** (đề xuất SOS thật), chỉ triển khai khi có lệnh `TIẾP TỤC`. Không sửa phần cước, SQLite, PDF/VietQR, package và workflow.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -203,3 +203,15 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - Không thay đổi code hiện hành của GPS/cước/SQLite/PDF/VietQR, package Android, theme, route và CI.
 - **Chưa xác minh CI cho commit Bước 17. CI #30 vẫn là mốc đạt trước đó.**
 - **Bước tiếp theo: 18. Dừng, chờ lệnh TIẾP TỤC.**
+
+
+## Bước 18 — tích hợp biển tốc độ và ngữ cảnh OSM tham khảo (19/11/2026)
+
+- Đã xác nhận trước khi thực hiện: **CI #31, commit `688872a`, đạt 4/4** (analyze, unit/widget, build APK arm64, Android 13 integration).
+- Thêm `lib/features/speed_limit/road_context_provider.dart`: `RoadContextProvider` tra cứu OSM qua **Overpass HTTPS được tài xế cấu hình**, không mặc định endpoint; chỉ chạy khi tài xế bấm, không gọi ở CI, cache RAM khoảng 200 m/64 ô, giới hạn tối thiểu 10 giây giữa các request mới. Không cho OSM giả định giới hạn hợp pháp.
+- `RoadSpeedController` dùng chung hai màn, cài đặt tay có phạm vi khoảng 200 m hoặc đến khi tài xế đổi, lưu SharedPreferences. Nguồn OSM chưa xác minh hoặc thiếu khu vực/kiểu đường phải để `~` hoặc `--`, `canAlert=false`; không nhận dạng tự động biển qua camera.
+- Thêm `lib/features/speed_limit/road_speed_panel.dart` hiển thị tốc độ GPS và biển, sheet chọn khu vực/kiểu đường, nhập biển và máy chủ OSM. Cảnh báo **trực quan** chỉ sau 3 giây vượt liên tục khi GPS tốt, 2 xung cách ≥15 giây, không bật âm thanh/rung trong bước này.
+- Chỉ sửa `home_page.dart` và `trip_map_panel.dart` để APK thật dùng panel mới; CI/widget test giữ `HomeSpeedPanel` mẫu cho tương thích luồng cũ.
+- Thêm `test/road_context_provider_test.dart` với kiểm thử nguồn, cache, 3s/15s và widget. Tổng cộng **5 Dart file** liên quan; không file nào >300 dòng. Tài liệu `docs/SPEED_LIMIT_STEP18.md` ghi rõ giới hạn, cách thử và nguyên tắc tránh cảnh báo sai.
+- **Còn thiếu:** âm báo/rung kiểm soát thực tế; định danh biển theo đoạn và hướng, kiểm chứng thực địa; không khẳng định app xác định chính xác giới hạn hợp pháp trên mọi tuyến. Không ảnh hưởng cước, BOT, snapshot/SQLite, PDF/VietQR.
+- **CI Bước 18 chưa xác nhận tại thời điểm commit. Bước tiếp theo: 19, chờ người dùng TIẾP TỤC.**

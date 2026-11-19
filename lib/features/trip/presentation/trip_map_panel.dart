@@ -6,6 +6,7 @@ import '../../../shared/glass_widgets.dart';
 import '../../../shared/shared_map_view.dart';
 import '../../map_tracking/data/gps_tracker.dart';
 import '../../map_tracking/presentation/home_widgets.dart';
+import '../../speed_limit/road_speed_panel.dart';
 
 /// Bản đồ chuyến đi được tách riêng để TripPage dưới 300 dòng.
 class TripMapPanel extends StatelessWidget {
@@ -38,12 +39,14 @@ class TripMapPanel extends StatelessWidget {
         bearing: GpsTracker.instance.fix?.point.headingDegrees ?? 0,
         onFollowChanged: onFollowChanged,
       )),
-      Positioned(top: 6, left: 6, child: HomeSpeedPanel(
-        limitKmh: 60,
-        speedKmh: GpsTracker.instance.fix?.speedKmh.round() ??
-            (GpsTracker.useMock ? 42 : 0),
-        onLimitTap: onLimitTap,
-      )),
+      Positioned(top: 6, left: 6,
+        child: GpsTracker.useMock
+            ? HomeSpeedPanel(
+                limitKmh: 60, speedKmh: 42,
+                onLimitTap: onLimitTap,
+              )
+            : const RoadSpeedPanel(),
+      ),
       Positioned(top: 5, right: 5, child: SizedBox(
         width: 60, height: 203,
         child: FittedBox(

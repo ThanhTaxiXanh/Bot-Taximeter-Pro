@@ -8,6 +8,7 @@ import '../../../shared/glass_widgets.dart';
 import '../../../shared/shared_map_view.dart';
 import '../data/gps_tracker.dart';
 import '../../road_safety/speed_alert_widgets.dart';
+import '../../speed_limit/road_speed_panel.dart';
 import 'gps_permission_prompt.dart';
 import 'home_widgets.dart';
 class HomePage extends StatefulWidget {
@@ -17,10 +18,7 @@ class HomePage extends StatefulWidget {
 }
 class _HomePageState extends State<HomePage> {
   final _mapKey = GlobalKey<SharedMapViewState>();
-  bool _is3D = true;
-  bool _isDark = false;
-  bool _traffic = false;
-  bool _follow = true;
+  bool _is3D = true, _isDark = false, _traffic = false, _follow = true;
   int _limitKmh = 60;
   void _message(String value) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -150,11 +148,13 @@ class _HomePageState extends State<HomePage> {
               ),
               Positioned(
                 top: 8, left: 8,
-                child: HomeSpeedPanel(
-                  limitKmh: _limitKmh, onLimitTap: _chooseSpeedLimit,
-                  speedKmh: GpsTracker.instance.fix?.speedKmh.round() ??
-                      (GpsTracker.useMock ? 42 : 0),
-                ),
+                child: GpsTracker.useMock
+                    ? HomeSpeedPanel(
+                        limitKmh: _limitKmh,
+                        onLimitTap: _chooseSpeedLimit,
+                        speedKmh: 42,
+                      )
+                    : const RoadSpeedPanel(),
               ),
               Positioned(
                 top: 7, right: 7,
