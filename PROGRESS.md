@@ -88,6 +88,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 - **Bước 12 (phần cơ sở): CI #24 đạt 4/4**, commit ứng dụng `f3d8c4b`: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44324457199. Job logs: analyzer không warning/error (lint info vẫn còn), **51/51 unit/widget test đạt**, APK debug arm64 build đạt, **Android 13 smoke 7/7 đạt**. APK: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/releases/tag/debug-latest. Chưa thử GPS thật, chưa đối chiếu nội dung đầy đủ Master Prompt Bước 12.
 - **Bước 13 (lưu lịch sử và thống kê cước GPS): CI #26 đạt 4/4**, commit mã `1a87031`: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44447984709. Log kiểm tra trực tiếp: analyzer không lỗi/warning (còn lint info), **56/56 unit/widget test đạt**, APK debug arm64 đạt, **Android 13 8/8 integration đạt**, trong đó 7 smoke chuẩn + 1 SQLite native. APK: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/releases/tag/debug-latest. Chưa kiểm tra upgrade v1→v2/SQLite trên Redmi có dữ liệu cũ và chưa đối chiếu Master Prompt đầy đủ.
 - **Bước 14 (biên lai PDF offline): CI #28 đạt 4/4**, commit ứng dụng `88b5a98`: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44454638790. Đã đối chiếu log trực tiếp: analyzer không warning/error (còn lint info), **58/58 unit/widget test đạt**, build APK debug arm64 đạt, **9/9 integration Android 13 đạt** (7 smoke, 1 SQLite, 1 PDF). APK: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/releases/tag/debug-latest. Chưa thử in/chia sẻ/lưu PDF trên Redmi thực tế; VietQR vẫn demo.
+- **Bước 15 (VietQR offline theo cuốc đã lưu): CI #30 đạt 4/4**, commit mã `2ec236b`: https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/actions/runs/44458349547. Log xác nhận analyzer không warning/error, **66/66** unit/widget test, APK debug arm64 và **9/9** Android 13 integration (7 smoke chuẩn + 1 SQLite native + 1 PDF offline). Bản debug tại https://github.com/ThanhTaxiXanh/Bot-Taximeter-Pro/releases/tag/debug-latest. Chưa đối chiếu Master Prompt, chưa kiểm tra quét VietQR và tiền ngân hàng thật trên Redmi.
 - SHA-1 debug: `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`.
 
 ## Cần thử trên điện thoại
@@ -101,7 +102,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Ưu tiên hiện tại:** Người dùng đã yêu cầu tiếp tục sau Bước 14. Đang triển khai **phần cơ sở Bước 15: tạo mã yêu cầu chuyển khoản VietQR offline**, mặc định tắt, chỉ cho chuyến SQLite đã lưu và có xác nhận hiển thị QR của tài xế. Cần CI mới xác nhận analyzer/unit/widget/APK/Android smoke. Không tự xác nhận đã nhận tiền và chưa có Master Prompt gốc để xác định đầy đủ phạm vi Bước 15; không triển khai Bước 16 trước khi có yêu cầu.
+**Ưu tiên hiện tại:** **Bàn giao sau CI #30 (Bước 15 phần cơ sở)**. CI đã xác minh analyzer ✅, 66/66 unit/widget test ✅, APK debug arm64 ✅, 9/9 integration Android 13 ✅. Tiếp theo là thử thực tế trên Redmi Note 12 Pro: cài đè không xóa SQLite, khôi phục chuyến, biên lai PDF và quét mã VietQR với ứng dụng ngân hàng **mà không chuyển tiền**. Chưa có Master Prompt gốc để đối chiếu toàn bộ phạm vi Bước 15, không có xác nhận tiền đã về. **Dừng tại Bước 15; chỉ mở Bước 16 nếu người dùng yêu cầu.**
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -140,11 +141,18 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 - Bổ sung `pdf: 3.13.1` và `printing: 5.15.0` vào pubspec, `test/receipt_pdf_test.dart` và `integration_test/receipt_pdf_test.dart`. Giữ nguyên CI, smoke test chuẩn, package Android và SHA-1.
 - Hướng dẫn thử: `docs/RECEIPT_PDF.md`. **CI #28 commit `88b5a98` đạt đủ analyzer, 58/58 unit/widget, APK arm64 và Android 13 9/9 integration (7 smoke chuẩn, 1 SQLite native, 1 PDF offline).** Chưa thử xuất/in/chia sẻ trên Redmi; chưa đối chiếu Master Prompt gốc để xác định toàn bộ phạm vi Bước 14.
 
-## Bước 15 — đang triển khai phần mã chuyển khoản, chưa nghiệm thu
+## Bước 15 — phần mã VietQR offline đã triển khai, CI #30 đạt 4/4
 
 - Tham khảo cấu trúc VietQR/NAPAS247 và EMVCo: `vietqr_transfer_payload.dart` tạo payload TLV với ngân hàng BIN 6 chữ số, số tài khoản, số tiền VND và CRC16/CCITT-FALSE; không gọi API, không gửi thông tin đến ngân hàng, không tạo giao dịch tự động.
 - `SettingsPage` có ô BIN ngân hàng và cờ **Cho phép tạo VietQR chuyển khoản** mặc định **TẮT**. Bật chỉ khi BIN, số tài khoản và tên người nhận hợp lệ ở mức kiểm tra định dạng. Không tự khẳng định ngân hàng/tài khoản đã được xác minh.
 - `CompletedTrip.receiptSnapshot` có `amountVnd` nguyên gốc từ SQLite; không suy đoán tiền bằng cách parse chữ cước. `ReceiptTransferPanel` chỉ tạo QR sau thao tác **Hiển thị QR chuyển khoản** trên một chuyến đã lưu. Biên lai mẫu vẫn hiện mã DEMO và không tạo QR chuyển tiền.
 - QR chuyển khoản **không** xác nhận đã thanh toán, không sửa dữ liệu doanh thu, không xuất hóa đơn hay lưu mật khẩu/OTP. Tài xế phải xác minh tiền vào bằng kênh ngân hàng riêng.
 - Kiểm thử mới: `test/vietqr_transfer_test.dart`, `test/vietqr_panel_test.dart`, mở rộng `test/completed_trip_store_test.dart`; hướng dẫn `docs/VIETQR_TRANSFER.md`.
-- **Chưa có kết quả CI cho phần VietQR và chưa thử quét trên Redmi.** Thiếu `MASTER PROMPT.md` gốc trong repository/tệp dự án nên chưa thể gọi toàn bộ Bước 15 hoàn tất.
+- **CI #30 (commit ứng dụng `2ec236b`) đã đạt 4/4 theo log:** analyzer không warning/error (lint info vẫn còn); **66/66 unit/widget test**; build APK debug arm64; **9/9 integration Android 13** (7 smoke chuẩn, 1 SQLite native, 1 PDF offline). Kiểm thử QR trên Android hiện chỉ là unit/widget, **chưa thử quét mã bằng ứng dụng ngân hàng thực tế trên Redmi**. Thiếu `MASTER PROMPT.md` gốc nên chưa thể gọi toàn bộ phạm vi Bước 15 hoàn tất.
+
+## Bàn giao 19/11/2026
+
+- Biên bản đầy đủ: [`docs/HANDOFF_2026-11-19.md`](docs/HANDOFF_2026-11-19.md).
+- Commit mã ứng dụng gần nhất: `2ec236ba1a6effdcea8321f8c536a04a178af6fd`; tài liệu bàn giao chỉ thay đổi Markdown, không khởi động build APK mới vì workflow bỏ qua `**.md`.
+- Mốc xác minh: **CI #30 đạt 4/4**; Issue #1 báo “TẤT CẢ ĐẠT”.
+- Việc chưa xác minh: GPS/bản đồ thật, nâng cấp SQLite có dữ liệu cũ trên Redmi, máy chủ Nominatim/OSRM được phép, chia sẻ/in PDF trên Android thật, VietQR quét được trên ngân hàng thật. Cước GPS **chỉ tham khảo**.
