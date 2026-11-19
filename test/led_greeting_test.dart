@@ -43,8 +43,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 350));
 
     expect(find.byType(LedGreetingPage), findsOneWidget);
-    expect(find.text('Chào mừng lên Taxi Xanh'), findsOneWidget);
     final text = tester.widget<Text>(find.byKey(const Key('led_message')));
+    expect(text.data, 'Chào mừng lên Taxi Xanh');
     expect(text.style!.fontSize, 120);
     expect(tester.takeException(), isNull);
 

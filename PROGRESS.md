@@ -276,3 +276,11 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - Giữ nguyên phần cước, GPS, báo tốc độ, SOS, SQLite v3, cache ngân hàng VietQR, QR/PDF, debug signing và workflow CI.
 - **Cần thử trên điện thoại:** cài đè bản debug sau khi CI đạt; khi xe đỗ, thử hiển thị từ Cài đặt, nhập lời chào tiếng Việt có dấu, thử 3 cỡ chữ và xoay dọc/ngang; quay lại bằng nút Đóng và phím Back, kiểm tra `Lưu cài đặt` không bị tác động. Không thao tác với điện thoại khi đang lái.
 - **CI commit Bước 21 chưa xác minh tại thời điểm ghi**. Bước kế tiếp chỉ sau lệnh `TIẾP TỤC` và xác nhận CI.
+
+
+### Sửa lỗi CI #38 — test màn LED (19/11/2026)
+
+- Đã xác nhận Issue #1 và GitHub Actions #38 tại commit `3aa4318`: **flutter analyze đạt, flutter test lỗi 1 ca (104 ca đạt), build APK và Android 13 đạt**. Không dựa vào workflow `conclusion=success` do `flutter test` được đặt `continue-on-error`.
+- Nguyên nhân: `test/led_greeting_test.dart`, ca **LED từ Cài đặt hiển thị lời chào lưu trên máy và đóng được**, dùng `find.text('Chào mừng lên Taxi Xanh')` với `findsOneWidget`; thực tế cùng chuỗi ở ô TextField và Text LED, thành 2 widget. Đây là lỗi chọn Finder, không phải lỗi tính năng LED.
+- Sửa **chỉ bài test**: lấy `Text` bằng key `led_message`, kiểm tra `text.data` và `fontSize=120`. Giữ nguyên thao tác đóng, kiểm chứng `SharedPreferences`, không sửa mã ứng dụng.
+- Chỉ thay **1 tệp Dart** (<300 dòng) và `PROGRESS.md`; CI của commit sửa lỗi **chưa được xác minh**. **Chưa thực hiện Bước 22**, phải chờ xác nhận CI kế tiếp đạt 4/4.
