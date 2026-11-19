@@ -102,7 +102,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Ưu tiên hiện tại:** **Bước 16 kiểm toán khoảng trống đã thực hiện trên mã nguồn**; chi tiết tại [`docs/FEATURE_GAP_AUDIT_2026-11-19.md`](docs/FEATURE_GAP_AUDIT_2026-11-19.md). Master Prompt gốc mục 10 chỉ có 14 bước; Bước 17 trở đi là đề xuất chia nhỏ để khắc phục khoảng trống, không phải bước đã được Master Prompt định nghĩa. Ưu tiên tiếp theo đề xuất: xây nền quy tắc tốc độ pháp lý (G01) sau khi xác minh văn bản còn hiệu lực; không kích hoạt báo tốc độ pháp lý khi chưa bảo đảm nguồn dữ liệu. Giữ nguyên CI #30 là mốc mã đã kiểm chứng và 5/5 thử nghiệm Redmi do người dùng xác nhận. **Chờ lệnh TIẾP TỤC để triển khai tính năng, không tự sửa mã.**
+**Ưu tiên hiện tại:** Bước 17 triển khai dữ liệu và engine giới hạn tốc độ theo Điều 6 Thông tư 38/2024/TT-BGTVT, tham khảo bản hợp nhất 74/2026/VBHN-TT-BXD. Chi tiết [`docs/SPEED_LIMIT_LEGAL_BASE_2026-11-19.md`](docs/SPEED_LIMIT_LEGAL_BASE_2026-11-19.md). Chưa nối cảnh báo/UI; không tự áp giới hạn khi thiếu biển/ngữ cảnh. CI của commit Bước 17 **chưa xác minh** (mốc trước: CI #30 đạt). **Bước tiếp theo: 18**, chỉ làm khi người dùng gõ TIẾP TỤC.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -192,3 +192,14 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - P1: dẫn đường GPS trực tiếp, dữ liệu ngân hàng BIN cache/seed, LED toàn màn hình, SQLite chuyến chi tiết.
 - P2: giọng nói, lưu tuyến, thống kê so sánh, cảnh báo kẹt xe, hoàn thiện README và kiểm toán chi phí Maps.
 - Mã và CI **không thay đổi**. Bước 17 chỉ là **đề xuất**; chờ yêu cầu `TIẾP TỤC`.
+
+
+## Bước 17 — engine quy tắc tốc độ Dart thuần (19/11/2026)
+
+- Thêm `lib/features/speed_limit/speed_rules.dart`: 16 quy tắc Điều 6 theo 4 nhóm xe, khu đông/ngoài khu đông dân cư, 2 kiểu đường. Mỗi hàng có căn cứ, điều khoản và ngày hiệu lực. Nguồn tham khảo Thông tư 38/2024, VBHN 74/2026, QCVN 41:2024, Nghị định 168/2024 đã sửa bởi 238/2026.
+- Thêm `lib/features/speed_limit/speed_limit_engine.dart`: `RoadContext`/`SpeedLimitResult`, ưu tiên manual > posted > rule > unknown. OSM chưa xác minh và khu vực suy đoán chỉ tham khảo, không cấp quyền cảnh báo. Thiếu ngữ cảnh trả `--`; cao tốc không tự áp giá trị 120/60.
+- Thêm `test/speed_limit_rules_test.dart` kiểm tra mọi tổ hợp Điều 6, thứ tự ưu tiên, dữ liệu chưa xác minh, mức cao tốc, ngưỡng phân loại 5/10/20/35 km/h. Chưa phát âm/rung hoặc đưa ra nhận định vi phạm.
+- Thêm `docs/SPEED_LIMIT_LEGAL_BASE_2026-11-19.md` mô tả căn cứ và giới hạn. Chưa thêm provider OSM/Overpass, UI, xác thực GPS 3 giây/15 giây (dành cho Bước 18).
+- Không thay đổi code hiện hành của GPS/cước/SQLite/PDF/VietQR, package Android, theme, route và CI.
+- **Chưa xác minh CI cho commit Bước 17. CI #30 vẫn là mốc đạt trước đó.**
+- **Bước tiếp theo: 18. Dừng, chờ lệnh TIẾP TỤC.**
