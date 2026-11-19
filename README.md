@@ -38,6 +38,10 @@
 - Tạo **Cloud Billing Budget + Alerts** và kiểm tra usage/quota định kỳ; **budget alerts chỉ cảnh báo, không tự chặn thanh toán**.
 - Không bật Map ID, Street View, Places, Directions/Routes, Static Maps, Geocoding hay Map Tiles API trong ứng dụng này.
 
+## Nghiệm thu bản debug trên điện thoại
+
+Xem [**Checklist nghiệm thu Bước 23**](docs/ACCEPTANCE_STEP23.md) trước khi dùng thực địa. CI chỉ xác minh mã/app trên máy ảo; GPS thật, hao pin, bản đồ với key Google, dữ liệu sau cài đè và VietQR cần được kiểm tra trên thiết bị Redmi. **Không gỡ ứng dụng để nâng cấp nếu muốn giữ lịch sử chuyến.**
+
 ## Công nghệ, kiểm thử, cấu trúc
 
 - Flutter (phiên bản ghi trong CI), Riverpod, GoRouter **7 tuyến**, `geolocator`, `google_maps_flutter`, `sqflite`, `pdf`, `printing`, `shared_preferences`.

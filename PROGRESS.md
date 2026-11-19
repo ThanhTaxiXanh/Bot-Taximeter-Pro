@@ -102,7 +102,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Bước 22 — tối ưu pin và rà soát Google Maps/README**: mã đã triển khai, cần chờ CI của commit mới. Điều kiện đầu vào: **CI #40 commit `c0abdce` đạt 4/4** theo Issue #1 và log jobs. Home GPS dùng chu kỳ 5 giây, bộ lọc khoảng cách 10m và tự dừng khi ứng dụng ra nền mà không có chuyến; khi có chuyến giữ GPS 1 giây/0m, foreground/wakelock và toàn bộ logic cước. Bổ sung `docs/BATTERY_MAPS_AUDIT_STEP22.md`, cập nhật `docs/GOOGLE_MAPS_SETUP.md`, `README.md`. **Bước tiếp theo đề xuất: 23 — nghiệm thu tổng thể**, chỉ khi CI Bước 22 đạt và người dùng yêu cầu `TIẾP TỤC`.
+**Bước 23 — rà soát và nghiệm thu tổng thể**: bổ sung bài kiểm thử native SQLite v1/v2→v3 trên DB thử độc lập và unit test kiểm tra cước → biên lai → VietQR; cập nhật README và [checklist nghiệm thu Redmi](docs/ACCEPTANCE_STEP23.md). **Đã xác nhận CI #41 commit `3669dd4` đạt 4/4 trước khi mở bước**. Chưa xác nhận CI commit Bước 23, chưa nghiệm thu GPS/Maps/pin hoặc thanh toán trên máy thật. Bước tiếp theo đề xuất **24 — xử lý kết quả nghiệm thu**, chỉ khi người dùng yêu cầu `TIẾP TỤC` và đã xem Issue #1 mới nhất.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -305,3 +305,17 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - Không thay logic cước/làm tròn/BOT, GPS filter, SQLite v3, VietQR/PDF, SOS, LED, 7 route, Android package, signing, CI. Không thêm dependencies.
 - **Cần nghiệm thu Redmi thực tế:** so sánh GPS Home khi xem/ra nền/quay lại và GPS chuyến đang chạy khi khóa màn hình; đo pin thực tế (chưa xác nhận), đảm bảo không mất quãng đường hoặc chuyến; kiểm tra Cloud Billing/Maps API key và SHA-1 từ bản APK cài đè. **CI của commit Bước 22 chưa được xác minh** tại thời điểm ghi.
 - **Bước tiếp theo:** 23 (đề xuất nghiệm thu tổng thể), chờ `TIẾP TỤC` và CI Bước 22 4/4; sửa lỗi CI trước nếu có.
+
+
+## Bước 23 — kiểm thử hồi quy, nghiệm thu tổng thể (19/11/2026)
+
+- **Điều kiện mở bước:** GitHub HEAD `3669dd4`; Issue #1 và từng job CI #41 xác nhận **4/4**: analyze, unit/widget, APK arm64, Android 13. Không có lỗi CI phải sửa trước khi mở bước.
+- **Đối chiếu Master Prompt gốc:** mục 1B (báo cáo CI thật và kiểm thử Android), mục 2 (một bước/lượt, tối đa 5 Dart ≤300 dòng, tiến độ), mục 3 (Google Maps không phí), mục 10 (GPS, cước, lịch sử, VietQR, PDF, SOS, LED, tối ưu pin). Lộ trình gốc kết thúc ở mục 14; **Bước 23 là đợt nghiệm thu bổ sung của dự án, không phải một mục mới trong Master Prompt**.
+- Thêm hàm `TaximeterDatabase.openAtPath(path)` vào `lib/features/history/data/taximeter_database.dart` để đưa **chính hàm schema v3/onUpgrade** cho test sử dụng tại đường dẫn DB độc lập. Hàm `instance` vẫn mở `bot_taximeter.db`; giữ nguyên `version: 3` và mọi SQL v1→v2→v3. Không xóa hay sửa SQLite thực của tài xế.
+- Thêm `integration_test/sqlite_upgrade_test.dart` chạy trên SQLite native Android: tạo DB cũ v1/v2 riêng, ghi snapshot `waiting`, ở v2 có chuyến `TTX-ACCEPTANCE` với cước 42.000 đ; mở qua hàm migration thật, xác nhận **không mất snapshot, lịch sử**, tạo được bảng `banks` và cài mới v3 có đủ 3 bảng. Dọn DB thử trong finally, không yêu cầu GPS/mạng/quyền mới.
+- Thêm `test/release_acceptance_test.dart`: luồng liên tính năng `TripController`→`MemoryCompletedTripStore`→`CompletedTrip.receiptSnapshot`→`ReceiptPdfData`→`VietQrTransferPayload`, kiểm tra 1,5 km, 360 giây waiting, 500 đ phí chờ, `roundVnd` đúng 500 vẫn **làm tròn xuống**, cộng BOT 5.000 đ sau cùng → tổng 35.000 đ; QR offline có CRC hợp lệ, không nhân đôi cuốc. Không tạo giao dịch thật.
+- Tạo `docs/ACCEPTANCE_STEP23.md` với bảng tình trạng minh bạch và checklist trực tiếp trên Redmi: cài **đè** APK, lịch sử/snapshot, GPS Home và GPS chuyến khi ra nền, lọc nhiễu, pin, cước, PDF, ngân hàng VietQR, SOS, LED, tốc độ, Google Maps/Cloud và quyền Android. Không tự đánh dấu nghiệm thu thực địa; liên kết từ `README.md`.
+- Thay đổi **3 tệp Dart** (mỗi tệp dưới 300 dòng), `README.md`, tài liệu nghiệm thu và `PROGRESS.md`. Không sửa `.github/`, `ci/`, debug keystore, package, 7 route, GPS filter, fare engine, chức năng SOS/LED hoặc VietQR payload.
+- **Tại thời điểm commit:** CI của Bước 23 chưa được xác minh; chưa chạy thử nâng cấp với dữ liệu cá nhân trên Redmi hoặc số tiền giao dịch thật. Phải đọc Issue #1 cùng SHA commit mới, kiểm tra 4/4 trước khi sử dụng bản APK mới. Nếu CI lỗi thì ưu tiên sửa lỗi và không tiến thêm bước 24.
+- **Việc cần kiểm tra trên điện thoại:** từng ô trong `docs/ACCEPTANCE_STEP23.md`, nhất là bảo toàn lịch sử, snapshot, GPS nền/đóng màn hình, bản đồ thật và số tiền/cước; không chia sẻ khóa API/OTP/vị trí riêng.
+- **Bước tiếp theo:** 24 — xử lý phát hiện từ nghiệm thu hoặc khóa sổ mã debug khi có CI 4/4 và người dùng tiếp tục.

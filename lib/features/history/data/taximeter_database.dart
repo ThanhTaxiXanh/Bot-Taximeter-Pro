@@ -14,7 +14,16 @@ class TaximeterDatabase {
   static Future<Database> _open() async {
     try {
       final base = await getDatabasesPath();
-      final db = await openDatabase('$base/bot_taximeter.db',
+      final db = await openAtPath('$base/bot_taximeter.db');
+      return _database = db;
+    } catch (_) {
+      _opening = null;
+      rethrow;
+    }
+  }
+
+  /// Mở schema hiện hành tại đường dẫn độc lập để test nâng cấp dữ liệu cũ.
+  static Future<Database> openAtPath(String path) => openDatabase(path,
         version: 3,
         onCreate: (database, _) async {
           await database.execute('CREATE TABLE trip_snapshots ('
@@ -27,12 +36,6 @@ class TaximeterDatabase {
           if (oldVersion < 3) await _createBanks(database);
         },
       );
-      return _database = db;
-    } catch (_) {
-      _opening = null;
-      rethrow;
-    }
-  }
 
   static Future<void> _createBanks(Database db) async {
     await db.execute('CREATE TABLE IF NOT EXISTS banks ('
