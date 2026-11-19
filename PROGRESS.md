@@ -102,7 +102,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Đã triển khai Bước 19 (SOS khẩn cấp)** sau khi xác nhận **CI #33, commit `842af5a`, đạt 4/4**. Mã SOS mở ứng dụng gọi điện bằng `tel:` hoặc bảng chia sẻ vị trí GPS bằng `share_plus`, **chỉ sau khi tài xế xác nhận từng thao tác**. Số gọi mặc định 113 và lưu riêng trong Cài đặt. Xem [`docs/SOS_STEP19.md`](docs/SOS_STEP19.md). **CI của commit Bước 19 chưa được xác minh**. Bước tiếp theo được đề xuất là **20 — danh sách/cache ngân hàng VietQR**, chỉ khi người dùng tiếp tục; ưu tiên sửa lỗi CI nếu có.
+**Bước 20 — danh sách ngân hàng VietQR, seed offline và cache SQLite v3** đã viết mã và commit, **chưa được xác minh CI của commit mới**. Đã xác nhận **CI #36 commit `f66f3be` đạt 4/4** trước khi triển khai. Có thể chọn ngân hàng/BIN qua mục Thanh toán trong Cài đặt, nhưng phải bấm **Lưu cài đặt** để lưu; không tự bật VietQR và không thay đổi tài khoản nhận tiền. Xem [`docs/VIETQR_BANKS_STEP20.md`](docs/VIETQR_BANKS_STEP20.md). **Bước tiếp theo: 21 (đề xuất LED chào khách)**, chỉ thực hiện sau khi CI của Bước 20 đạt và người dùng yêu cầu `TIẾP TỤC`; nếu CI lỗi phải sửa trước.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -251,3 +251,16 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - Import sai `../../settings/presentation/settings_widgets.dart` từ thư mục `lib/features/sos/` trỏ sang `lib/settings/` không tồn tại. Sửa thành **`../settings/presentation/settings_widgets.dart`**, đúng đường dẫn tới `lib/features/settings/presentation/settings_widgets.dart`; các lỗi không tìm thấy `SettingsSection` và `SettingsField` là hệ quả của import hỏng.
 - Chỉ sửa **1 dòng trong 1 tệp Dart** và cập nhật `PROGRESS.md`. Không sửa chức năng SOS, dependencies, khóa debug, workflow, GPS/cước, SQLite/PDF/VietQR, 7 route hay màn hình cũ.
 - **Chờ CI của commit sửa lỗi:** chỉ xác nhận thành công sau khi đọc Issue #1 và log đúng SHA. Chưa mở Bước 20.
+
+
+## Bước 20 — danh sách ngân hàng VietQR và cache SQLite v3 (19/11/2026)
+
+- Kiểm tra điều kiện đầu vào: **CI #36 cho commit `f66f3be` đạt 4/4** theo GitHub Actions và Issue #1; Bước 19 SOS giữ nguyên.
+- Đối chiếu Master Prompt gốc mục 8: danh sách ngân hàng + mã BIN từ `https://api.vietqr.io/v2/banks` khi online, cache vào bảng SQLite `banks`, có JSON seed offline trong `assets/`. Xác minh định dạng API `code: "00"`, `data`, `bin`, `shortName`, `transferSupported` qua tài liệu VietQR.
+- Thêm `lib/features/receipt/data/vietqr_bank_repository.dart`: model `VietQrBank`, kho nhớ và SQLite, kiểm tra cấu trúc API, BIN 6 số, loại bỏ mục không hỗ trợ chuyển tiền, loại trùng BIN, danh sách hợp lệ tối thiểu 5 ngân hàng. Mặc định đọc cache; cache rỗng thì đọc seed và ghi vào SQLite. Tải HTTPS chỉ khi người dùng bấm, không gọi mạng trong CI. Cập nhật thất bại giữ cache cũ bằng transaction SQLite.
+- Nâng `lib/features/history/data/taximeter_database.dart` từ **v2 lên v3**, `onCreate` tạo bảng `banks`, `onUpgrade` thêm bảng nếu <3. Vẫn giữ bảng `trip_snapshots`, `completed_trips`, khóa debug, đường dẫn DB `bot_taximeter.db`; không xóa dữ liệu.
+- Thêm `assets/data/vietqr_banks_seed.json` chứa **18 ngân hàng/BIN phổ biến** đối chiếu dữ liệu VietQR; đăng ký trong `pubspec.yaml` (không thêm dependency).
+- Thêm `lib/features/receipt/presentation/vietqr_bank_picker.dart` chọn/lọc tên hoặc BIN và nút làm mới mạng có chủ ý; sửa `settings_page.dart` để chọn tên và BIN vào hai ô hiện hữu. **Chưa lưu ngay**: phải bấm `Lưu cài đặt`; chủ tài khoản và số TK không bị ghi đè. Không tự bật QR và không đổi payload VietQR offline.
+- Thêm `test/vietqr_bank_repository_test.dart` kiểm tra seed/cache offline, không tự gọi API, cập nhật thành công/thất bại giữ cache, phân loại BIN, trùng, ngân hàng không hỗ trợ, widget chọn ngân hàng giả lập. **Tổng cộng 5 Dart file**, mỗi file không quá 300 dòng.
+- **Cần thử trên điện thoại:** cài đè APK (không gỡ ứng dụng) và kiểm tra migration SQLite v2→v3 giữ snapshot/lịch sử; chọn ngân hàng, đối chiếu đúng BIN/số tài khoản/chủ TK bằng ứng dụng ngân hàng; dùng offline mở lại vẫn có danh sách; làm mới qua mạng chỉ khi cần; QR vẫn không báo đã nhận tiền. Chưa có integration test native riêng cho bảng banks trên thiết bị.
+- **CI của commit Bước 20 chưa được xác minh tại thời điểm ghi.** Bước tiếp theo: **21**, chỉ sau yêu cầu `TIẾP TỤC`, ưu tiên sửa lỗi CI nếu phát sinh.

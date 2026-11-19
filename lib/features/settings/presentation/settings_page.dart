@@ -8,6 +8,7 @@ import 'routing_server_settings.dart';
 import '../../road_safety/speed_alert_widgets.dart';
 import '../../sos/sos_widgets.dart';
 import '../../receipt/data/vietqr_transfer_payload.dart';
+import '../../receipt/presentation/vietqr_bank_picker.dart';
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
   @override
@@ -216,6 +217,10 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _paymentSettings() => SettingsSection(
     title: 'Thanh toán', icon: Icons.account_balance_wallet,
     children: <Widget>[
+      VietQrBankPicker(onSelected: (bank) => setState(() {
+        _bank.text = bank.shortName;
+        _bankBin.text = bank.bin;
+      })),
       SettingsField(label: 'Ngân hàng', controller: _bank,
           hint: 'Chưa cấu hình'),
       SettingsField(label: 'Chủ tài khoản', controller: _owner),

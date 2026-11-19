@@ -1,0 +1,131 @@
+{
+  "code": "00",
+  "data": [
+    {
+      "bin": "970415",
+      "shortName": "VietinBank",
+      "name": "Ngân hàng TMCP Công thương Việt Nam",
+      "code": "ICB",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970436",
+      "shortName": "Vietcombank",
+      "name": "Ngân hàng TMCP Ngoại thương Việt Nam",
+      "code": "VCB",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970418",
+      "shortName": "BIDV",
+      "name": "Ngân hàng TMCP Đầu tư và Phát triển Việt Nam",
+      "code": "BIDV",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970405",
+      "shortName": "Agribank",
+      "name": "Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam",
+      "code": "VBA",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970448",
+      "shortName": "OCB",
+      "name": "Ngân hàng TMCP Phương Đông",
+      "code": "OCB",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970422",
+      "shortName": "MBBank",
+      "name": "Ngân hàng TMCP Quân đội",
+      "code": "MB",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970407",
+      "shortName": "Techcombank",
+      "name": "Ngân hàng TMCP Kỹ thương Việt Nam",
+      "code": "TCB",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970416",
+      "shortName": "ACB",
+      "name": "Ngân hàng TMCP Á Châu",
+      "code": "ACB",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970432",
+      "shortName": "VPBank",
+      "name": "Ngân hàng TMCP Việt Nam Thịnh Vượng",
+      "code": "VPB",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970423",
+      "shortName": "TPBank",
+      "name": "Ngân hàng TMCP Tiên Phong",
+      "code": "TPB",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970403",
+      "shortName": "Sacombank",
+      "name": "Ngân hàng TMCP Sài Gòn Thương Tín",
+      "code": "STB",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970437",
+      "shortName": "HDBank",
+      "name": "Ngân hàng TMCP Phát triển Thành phố Hồ Chí Minh",
+      "code": "HDB",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970441",
+      "shortName": "VIB",
+      "name": "Ngân hàng TMCP Quốc tế Việt Nam",
+      "code": "VIB",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970443",
+      "shortName": "SHB",
+      "name": "Ngân hàng TMCP Sài Gòn - Hà Nội",
+      "code": "SHB",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970431",
+      "shortName": "Eximbank",
+      "name": "Ngân hàng TMCP Xuất Nhập khẩu Việt Nam",
+      "code": "EIB",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970426",
+      "shortName": "MSB",
+      "name": "Ngân hàng TMCP Hàng Hải Việt Nam",
+      "code": "MSB",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970425",
+      "shortName": "ABBANK",
+      "name": "Ngân hàng TMCP An Bình",
+      "code": "ABB",
+      "transferSupported": 1
+    },
+    {
+      "bin": "970449",
+      "shortName": "LPBank",
+      "name": "Ngân hàng TMCP Lộc Phát Việt Nam",
+      "code": "LPB",
+      "transferSupported": 1
+    }
+  ]
+}

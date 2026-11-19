@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 
-/// Dùng chung một kết nối SQLite để bảo đảm migration v1→v2 không mất snapshot.
+/// Một kết nối SQLite; migration v1→v2→v3 giữ snapshot và chuyến cũ.
 class TaximeterDatabase {
   TaximeterDatabase._();
   static Database? _database;
@@ -15,14 +15,16 @@ class TaximeterDatabase {
     try {
       final base = await getDatabasesPath();
       final db = await openDatabase('$base/bot_taximeter.db',
-        version: 2,
+        version: 3,
         onCreate: (database, _) async {
           await database.execute('CREATE TABLE trip_snapshots ('
             'id TEXT PRIMARY KEY, payload TEXT NOT NULL, updated_at INTEGER)');
           await _createCompleted(database);
+          await _createBanks(database);
         },
         onUpgrade: (database, oldVersion, _) async {
           if (oldVersion < 2) await _createCompleted(database);
+          if (oldVersion < 3) await _createBanks(database);
         },
       );
       return _database = db;
@@ -30,6 +32,12 @@ class TaximeterDatabase {
       _opening = null;
       rethrow;
     }
+  }
+
+  static Future<void> _createBanks(Database db) async {
+    await db.execute('CREATE TABLE IF NOT EXISTS banks ('
+      'bin TEXT PRIMARY KEY, short_name TEXT NOT NULL,'
+      'full_name TEXT NOT NULL, bank_code TEXT NOT NULL)');
   }
 
   static Future<void> _createCompleted(Database db) async {

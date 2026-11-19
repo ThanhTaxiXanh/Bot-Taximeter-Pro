@@ -38,3 +38,4 @@ flutter:
     - assets/images/logo.png
     - assets/map_styles/dark.json
     - assets/map_styles/light.json
+    - assets/data/vietqr_banks_seed.json
