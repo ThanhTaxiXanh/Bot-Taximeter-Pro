@@ -102,7 +102,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Ưu tiên hiện tại:** **Bàn giao sau CI #30 (Bước 15 phần cơ sở)**. CI đã xác minh analyzer ✅, 66/66 unit/widget test ✅, APK debug arm64 ✅, 9/9 integration Android 13 ✅. Tiếp theo là thử thực tế trên Redmi Note 12 Pro: cài đè không xóa SQLite, khôi phục chuyến, biên lai PDF và quét mã VietQR với ứng dụng ngân hàng **mà không chuyển tiền**. Chưa có Master Prompt gốc để đối chiếu toàn bộ phạm vi Bước 15, không có xác nhận tiền đã về. **Dừng tại Bước 15; chỉ mở Bước 16 nếu người dùng yêu cầu.**
+**Ưu tiên hiện tại:** Đã tiếp nhận xác nhận kiểm thử thực địa 5/5 của người dùng trên Redmi Note 12 Pro; CI tham chiếu vẫn là #30 (commit ứng dụng `2ec236b`, 66/66 unit/widget, APK arm64, 9/9 Android 13). Đã đọc `MASTER PROMPT.md` trong tệp của Project ChatGPT; tài liệu này **chưa thấy ở gốc repository GitHub** tại thời điểm đối chiếu. Lộ trình gốc tại mục 10 chỉ có **14 bước**, không định nghĩa Bước 15 hoặc 16. Việc triển khai tiếp theo phải được người dùng xác định rõ phạm vi, không tự mở Bước 16. Các mục cần đối chiếu chi tiết ghi ở phần cuối tài liệu.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -156,3 +156,29 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 - Commit mã ứng dụng gần nhất: `2ec236ba1a6effdcea8321f8c536a04a178af6fd`; tài liệu bàn giao chỉ thay đổi Markdown, không khởi động build APK mới vì workflow bỏ qua `**.md`.
 - Mốc xác minh: **CI #30 đạt 4/4**; Issue #1 báo “TẤT CẢ ĐẠT”.
 - Việc chưa xác minh: GPS/bản đồ thật, nâng cấp SQLite có dữ liệu cũ trên Redmi, máy chủ Nominatim/OSRM được phép, chia sẻ/in PDF trên Android thật, VietQR quét được trên ngân hàng thật. Cước GPS **chỉ tham khảo**.
+
+
+## Nghiệm thu thiết bị & đối chiếu MASTER PROMPT gốc — 19/11/2026
+
+**Nguồn xác nhận:** Người dùng báo cáo đã trực tiếp thử bản APK trên Redmi Note 12 Pro ngày 19/11/2026. Đây là kết quả nghiệm thu thủ công do người dùng cung cấp, không phải log thiết bị được thu thập độc lập. Không có giao dịch ngân hàng được thực hiện; không chứng minh tiền đã vào tài khoản.
+
+### Kết quả kiểm thử thực tế do người dùng xác nhận
+
+- [x] Cài đè APK, không xóa dữ liệu ứng dụng và SQLite cũ.
+- [x] Kiểm tra GPS, quãng đường, cước theo km, BOT và phí chờ.
+- [x] Kiểm tra tạm dừng, tiếp tục và khôi phục chuyến sau khi đóng ứng dụng.
+- [x] Kiểm tra lịch sử, tạo PDF tiếng Việt, in và chia sẻ tệp.
+- [x] Quét VietQR bằng ứng dụng ngân hàng, đối chiếu người nhận và số tiền; **không chuyển khoản**.
+
+Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, commit `2ec236ba1a6effdcea8321f8c536a04a178af6fd`: analyzer đạt, 66/66 unit/widget, APK debug arm64, 9/9 integration Android 13.
+
+### Đối chiếu Master Prompt gốc (tệp thuộc Project ChatGPT)
+
+- Master Prompt mục **10** định nghĩa **14 bước**; không có định nghĩa Bước 15 hay Bước 16. Số thứ tự Bước 13–15 trong quá trình triển khai hiện tại là cách tách nhỏ công việc, **không trùng hoàn toàn** với lộ trình gốc.
+- **Bước 12 gốc (mục 6B):** yêu cầu `speed_rules.dart`, `SpeedLimitEngine`, `RoadContextProvider` (OSM/Overpass), ghi đè biển/ngưỡng, cảnh báo theo bậc và unit test pháp lý. Repo mới có `features/road_safety` để cảnh báo theo **ngưỡng cá nhân**, chưa có bằng chứng triển khai hệ quy tắc pháp lý đầy đủ. Không được hiển thị ngưỡng cá nhân như giới hạn tốc độ hợp pháp.
+- **Bước 13 gốc:** gộp lưu lịch sử SQLite, thống kê/biểu đồ thật, VietQR offline, **danh sách/cache ngân hàng** và PDF. Mã hiện đã chia thành Bước 13 (lịch sử), 14 (PDF), 15 (VietQR), nhưng chưa thấy triển khai `banks` cache/seed và tải danh sách BIN theo yêu cầu gốc; cần xác minh trước khi tuyên bố đạt đầy đủ mục 13 gốc.
+- **Bước 14 gốc:** hoàn thiện **SOS, cảnh báo, câu chào LED, tối ưu pin, rà soát chi phí Google, README**. Theo cây file hiện tại và PROGRESS chưa có cơ sở xác nhận hoàn thành toàn bộ; cần lập danh sách việc còn lại khi được phép triển khai.
+- **Khác biệt package cần giữ nguyên:** Master Prompt có chỉ dẫn Google Maps theo package `vn.bottaximeter.pro`, trong khi package Android đã bàn giao và kiểm thử là `vn.bottaximeter.bot_taximeter_pro`. **Không đổi package**; khi rà soát khóa Maps phải dùng package thực tế của APK cùng SHA-1 hiện hành, không sao chép nguyên ví dụ cũ.
+- File `MASTER PROMPT.md` đã có trong tệp của Project ChatGPT và được đọc để đối chiếu, nhưng **chưa được tìm thấy trong thư mục gốc của repository GitHub** khi kiểm tra `main`.
+
+**Kết luận:** Ghi nhận Bước 15 phần cơ sở đã đạt CI và 5/5 thử nghiệm thủ công được báo cáo. Chưa xác nhận toàn bộ phạm vi Master Prompt gốc. **Dừng ở mốc bàn giao Bước 15; không triển khai Bước 16 nếu chưa có lệnh “TIẾP TỤC” và phạm vi được chốt.** Cước GPS vẫn chỉ mang tính tham khảo, chưa được kiểm định pháp lý.
