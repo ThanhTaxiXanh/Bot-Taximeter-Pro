@@ -73,7 +73,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 ## Quyết định kỹ thuật và rủi ro
 
 - Không dùng Google Directions/Places/Geocoding API; khoảng cách tính cước lấy từ `GpsTracker`, không phải từ Google Maps.
-- Snapshot là dữ liệu phục hồi chuyến đang chạy, **không phải bảng `trips` lịch sử hoàn chỉnh**; lưu lịch sử và thống kê thật sẽ làm ở Bước 13.
+- Snapshot vẫn là dữ liệu khôi phục chuyến đang chạy; Bước 13 tạo bảng `completed_trips` riêng và chỉ xóa snapshot sau khi lưu chuyến hoàn thành thành công. Không được xóa snapshot khi nâng DB v1→v2.
 - Nếu không có GPS/tín hiệu xấu hoặc điện thoại bị hệ thống dừng, quãng đường có thể bị thiếu. UI ghi rõ chỉ là **cước tham khảo**, không có giá trị pháp lý/kiểm định, không thay thế thiết bị thu cước được cấp phép.
 - Khi app bị đóng, không tự cộng khoảng cách hoặc thời gian chờ chưa ghi nhận, để tránh cộng phí sai. Mốc phục hồi thực tế bị giới hạn bởi snapshot gần nhất, tối đa khoảng 3 giây nếu timer/SQLite vẫn hoạt động bình thường.
 - `sqflite` chỉ mở database trên Android bình thường. CI mock dùng memory; vì vậy phải thử phục hồi SQLite thực tế trên thiết bị.
@@ -99,7 +99,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Ưu tiên hiện tại:** Phần cơ sở Bước 12 đã qua CI #24: analyzer, 51 unit/widget test, APK arm64, 7/7 smoke Android 13. Tiếp theo kiểm tra Redmi và đối chiếu Master Prompt gốc trước khi xác nhận trọn Bước 12. Không triển khai Bước 13 khi chưa có yêu cầu tiếp tục.
+**Ưu tiên hiện tại:** Người dùng đã yêu cầu tiếp tục; đang triển khai Bước 13 (lưu lịch sử chuyến, thống kê cước GPS thực từ SQLite). Chỉ xác nhận khi CI mới đạt analyzer, test, APK và smoke Android 13. Vẫn cần thử migration SQLite trên Redmi và đối chiếu Master Prompt gốc trước khi xác nhận toàn bộ phạm vi Bước 13.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -120,3 +120,12 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 - Không dùng `traffic_signs.csv` hay `giao_thong_viet_nam.csv` làm nguồn tốc độ giới hạn tự động do chưa xác minh tính chính thức/độ mới. Biển giới hạn minh họa trên bản đồ vẫn được ghi nhãn dữ liệu mẫu.
 - Test mới: `test/speed_alert_engine_test.dart`, `test/speed_alert_widgets_test.dart`; CI dùng GPS/SharedPreferences giả lập, không có Google Maps API key.
 - Hướng dẫn và giới hạn tại `docs/SPEED_ALERT_SETUP.md`. **CI #24 đã xác nhận phần cơ sở 4/4 đạt. Chưa xác nhận toàn bộ Bước 12 khi chưa đối chiếu Master Prompt gốc và chưa thử thực địa trên Redmi.**
+
+## Bước 13 — đang triển khai, chờ CI
+
+- `TaximeterDatabase` nâng `bot_taximeter.db` từ v1 lên v2, thêm `completed_trips` và chỉ mục thời gian, giữ nguyên `trip_snapshots` để khôi phục chuyến cũ.
+- `TripController.complete()` ghi một `CompletedTrip` idempotent theo ID bắt đầu chuyến trước khi xóa snapshot. Lưu lỗi thì giữ snapshot, tài xế có thể thử lại. Không ghi chuyến khi Bỏ chuyến cũ.
+- `HistoryPage` thay doanh thu mẫu bằng số liệu từ `CompletedTripStore`, lọc hôm nay/7 ngày/30 ngày và vẽ biểu đồ 7 ngày. Không nhận tiền thật, không suy đoán dữ liệu thanh toán.
+- Biên lai đọc bản ghi thực với ID, mốc thời gian, km, phút chờ, BOT và cước GPS; các trường chưa có ghi “Chưa ghi nhận” thay vì hiển thị dữ liệu khách mẫu.
+- `test/completed_trip_store_test.dart`, `test/history_page_test.dart` mới và `integration_test/completed_history_test.dart` kiểm tra SQLite native trên máy ảo; giữ nguyên smoke test chuẩn.
+- Hướng dẫn thử an toàn và giới hạn tại `docs/HISTORY_STORAGE.md`. **Chưa có kết quả CI cho commit Bước 13 và chưa thử nâng cấp SQLite trực tiếp trên Redmi.** File Master Prompt gốc vẫn chưa có trong repository.

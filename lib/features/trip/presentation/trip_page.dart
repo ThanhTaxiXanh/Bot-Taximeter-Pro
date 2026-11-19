@@ -100,9 +100,6 @@ class _TripPageState extends State<TripPage> {
     } else { _controller.addToll(result); }
   }
 
-  String _clock(int seconds) => '${(seconds ~/ 60).toString().padLeft(2, '0')}:'
-      '${(seconds % 60).toString().padLeft(2, '0')}';
-
   Future<void> _finish() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -120,20 +117,17 @@ class _TripPageState extends State<TripPage> {
     );
     if (!mounted || confirmed != true) return;
     setState(() => _busy = true);
-    final amount = _controller.fare;
-    final meters = _controller.distanceMeters;
-    final elapsed = _controller.elapsedSeconds;
-    final waiting = _controller.waitingSeconds;
-    await _controller.complete();
-    await GpsTracker.instance.stop();
-    if (!mounted) return;
-    context.go(AppRouter.receipt, extra: <String, String>{
-      'fare': formatVnd(amount.total),
-      'distance': formatKm(meters / 1000),
-      'duration': _clock(elapsed), 'waiting': _clock(waiting),
-      'waitFee': '${amount.waitFee.toStringAsFixed(0)} đ (trước làm tròn)',
-      'toll': formatVnd(amount.toll),
-    });
+    try {
+      final saved = await _controller.complete();
+      if (saved == null) throw StateError('Chuyến chưa được ghi');
+      await GpsTracker.instance.stop();
+      if (!mounted) return;
+      context.go(AppRouter.receipt, extra: saved.receiptSnapshot);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      _notice('Không lưu được lịch sử. Chuyến vẫn còn để thử lại.');
+    }
   }
 
   Future<void> _sos() => showDialog<void>(

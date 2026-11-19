@@ -5,6 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../fare_meter/fare_calculator.dart';
+import '../history/data/completed_trip.dart';
+import '../history/data/completed_trip_store.dart';
+import '../history/data/taximeter_database.dart';
 import '../map_tracking/data/gps_tracker.dart';
 
 enum TripState { idle, pickingUp, inTrip, waiting, completed }
@@ -29,21 +32,9 @@ class MemoryTripStore implements TripStore {
   Future<void> clear() async { current = null; }
 }
 
-/// Snapshot bền vững trên máy; bảng lịch sử cuốc hoàn chỉnh thuộc Bước 13.
+/// Snapshot phiên bản cũ được giữ nguyên qua migration SQLite v1 → v2.
 class SqliteTripStore implements TripStore {
-  Database? _database;
-  Future<Database> get _db async {
-    if (_database != null) return _database!;
-    final base = await getDatabasesPath();
-    final db = await openDatabase('$base/bot_taximeter.db',
-      version: 1,
-      onCreate: (database, _) async {
-        await database.execute('CREATE TABLE trip_snapshots ('
-            'id TEXT PRIMARY KEY, payload TEXT NOT NULL, updated_at INTEGER)');
-      },
-    );
-    return _database = db;
-  }
+  Future<Database> get _db => TaximeterDatabase.instance;
   @override
   Future<Map<String, dynamic>?> read() async {
     final rows = await (await _db).query('trip_snapshots',
@@ -72,17 +63,21 @@ class TripController extends ChangeNotifier {
   TripController({
     required TripStore store, DateTime Function()? clock,
     double Function()? distanceSource, double Function()? speedSource,
-    this.runTimer = true,
-  }) : _store = store, _clock = clock ?? DateTime.now,
+    this.runTimer = true, CompletedTripStore? completedStore,
+  }) : _store = store,
+       _completedStore = completedStore ?? MemoryCompletedTripStore(),
+       _clock = clock ?? DateTime.now,
        _distanceSource = distanceSource ??
            (() => GpsTracker.instance.distanceMeters),
        _speedSource = speedSource ??
            (() => GpsTracker.instance.fix?.speedKmh ?? -1);
 
   static final TripController instance = TripController(
-    store: GpsTracker.useMock ? MemoryTripStore() : SqliteTripStore());
+    store: GpsTracker.useMock ? MemoryTripStore() : SqliteTripStore(),
+    completedStore: CompletedTripStores.instance);
 
   final TripStore _store;
+  final CompletedTripStore _completedStore;
   final DateTime Function() _clock;
   final double Function() _distanceSource, _speedSource;
   final bool runTimer;
@@ -264,11 +259,34 @@ class TripController extends ChangeNotifier {
   }
   Future<void> flush() => _writes;
 
-  Future<void> complete() async {
-    if (!isActive) return;
-    tick(); state = TripState.completed; _ticker?.cancel();
-    await _writes; await _store.clear();
+  /// Ghi lịch sử theo ID bắt đầu chuyến, rồi mới xóa snapshot.
+  /// Nếu SQLite lỗi, giữ snapshot để có thể hoàn tất lại mà không mất cước.
+  Future<CompletedTrip?> complete() async {
+    if (!isActive) return null;
+    tick();
+    _ticker?.cancel();
+    final finished = _clock();
+    final started = startedAt ?? finished;
+    final fareNow = fare;
+    final trip = CompletedTrip(
+      id: 'TTX-${started.millisecondsSinceEpoch}',
+      startedAt: started, finishedAt: finished,
+      fareVnd: fareNow.total, distanceMeters: distanceMeters,
+      elapsedSeconds: elapsedSeconds, waitingSeconds: waitingSeconds,
+      waitFeeVnd: fareNow.waitFee.round(), tollVnd: tollFee,
+    );
+    _persist();
+    try {
+      await _writes;
+      await _completedStore.save(trip);
+      await _store.clear();
+    } catch (_) {
+      _startTicker();
+      rethrow;
+    }
+    state = TripState.completed;
     notifyListeners();
+    return trip;
   }
 
   /// Chỉ dùng để dọn tài nguyên khi không có chuyến đang chạy.

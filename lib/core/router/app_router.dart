@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import '../../features/trip/trip_controller.dart';
+import '../../features/history/data/completed_trip_store.dart';
 
 import '../../features/map_tracking/presentation/home_page.dart';
 import '../../features/map_tracking/presentation/search_page.dart';
@@ -19,7 +20,9 @@ abstract final class AppRouter {
   static const String receipt = '/receipt';
   static const String settings = '/settings';
 
-  static GoRouter createRouter({TripController? tripController}) => GoRouter(
+  static GoRouter createRouter({
+    TripController? tripController, CompletedTripStore? completedStore,
+  }) => GoRouter(
     initialLocation: home,
     routes: <RouteBase>[
       GoRoute(path: home, builder: (_, _) => const HomePage()),
@@ -41,7 +44,8 @@ abstract final class AppRouter {
       ),
       GoRoute(path: trip, builder: (_, _) =>
           TripPage(controller: tripController)),
-      GoRoute(path: history, builder: (_, _) => const HistoryPage()),
+      GoRoute(path: history, builder: (_, _) =>
+          HistoryPage(store: completedStore)),
       GoRoute(
         path: receipt,
         builder: (_, state) {

@@ -24,10 +24,12 @@ class _ReceiptPageState extends State<ReceiptPage> {
   String _owner = '';
   String _account = '';
 
+  bool get _recorded => widget.snapshot['isRecorded'] == 'true';
+
   String _field(String key, String fallback) =>
       widget.snapshot[key]?.trim().isNotEmpty == true
           ? widget.snapshot[key]!
-          : fallback;
+          : (_recorded ? 'Chưa ghi nhận' : fallback);
 
   @override
   void initState() {
@@ -201,8 +203,10 @@ class _ReceiptPageState extends State<ReceiptPage> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        const Text('DỮ LIỆU MẪU · KHÔNG PHẢI HÓA ĐƠN',
-            style: TextStyle(
+        Text(_recorded
+            ? 'BIÊN LAI CƯỚC GPS THAM KHẢO · CHƯA KIỂM ĐỊNH'
+            : 'DỮ LIỆU MẪU · KHÔNG PHẢI HÓA ĐƠN',
+            style: const TextStyle(
               color: AppColors.danger, fontSize: 11,
               fontWeight: FontWeight.bold,
             )),
