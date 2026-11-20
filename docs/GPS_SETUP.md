@@ -37,3 +37,10 @@ Bước này cho phép bật GPS thiết bị, hiển thị marker/tốc độ/�
 - Kiểm tra độ chính xác và tốc độ thực, di chuyển chậm / dừng / mất GPS, quyền bị tắt giữa chừng; chỉ số không được nhảy phi thực tế.
 - Trong Home, chạm GPS để bật; chạm tên đường để yêu cầu tra cứu nếu có endpoint. Trong chuyến, thử tạm dừng, bật tùy chọn pin, kết thúc, xác minh thông báo GPS nền biến mất.
 - Nếu không cấp GPS, Home hiện trạng thái chưa bật và tốc độ 0; tuyến/giá/cước mẫu vẫn chưa có giá trị vận hành.
+
+## Bước 25 — tên đường gắn trực tiếp vào marker GPS
+
+- **Home** và **Đang chạy chuyến** sử dụng cùng `SharedMapView`. Mũi tên GPS trên bản đồ thật giờ mang theo pill tên đường ở **ngay phía dưới**, không phải một nhãn đứng yên theo màn hình. Tên được lấy từ `GpsTracker.instance.roadName` (nếu đã xác minh bằng Nominatim).
+- Khi GPS đã có fix nhưng chưa có tên đường: `Chưa xác định tên đường`. Không có fix thì không vẽ marker. Để lấy tên, chạm **thẻ tên đường** trong Home/Trip sau khi cấu hình geocoder HTTPS được phép; không gửi GPS tự động tới dịch vụ công cộng.
+- Tên đường chưa đủ căn cứ để suy ra biển giới hạn tốc độ. Nguồn biển báo CSV/GeoJSON do người dùng cung cấp đã được kiểm kê tại `docs/TRAFFIC_IMAGES_STEP25.md`, **chưa kết nối với luật tốc độ**. Khi di chuyển hơn 75m từ điểm tra cứu cũ, tên không còn tin cậy và bị xóa.
+- Kiểm tra marker trong GoogleMap thật, biểu tượng/nhãn không che thao tác lái xe; `CI=true` chỉ xem bản đồ Canvas và test dữ liệu nhãn, không chứng minh chất lượng GPS hay tên đường thực.

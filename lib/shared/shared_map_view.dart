@@ -1,5 +1,4 @@
 import 'dart:io' show Platform;
-import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -8,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/app_config.dart';
+import 'gps_marker_art.dart';
 import '../features/map_tracking/presentation/mock_travel_data.dart';
 import '../features/map_tracking/presentation/home_map_mock.dart';
 
@@ -20,6 +20,7 @@ class SharedMapView extends StatefulWidget {
     this.showRoute = false, this.routeIndex = 0,
     this.routePoints, this.onFollowChanged,
     this.vehiclePosition,
+    this.roadName,
     this.bearing = 0,
     this.zoom = 17,
   });
@@ -34,6 +35,7 @@ class SharedMapView extends StatefulWidget {
   final List<LatLng>? routePoints;
   final ValueChanged<bool>? onFollowChanged;
   final LatLng? vehiclePosition;
+  final String? roadName;
   final double bearing;
   final double zoom;
 
@@ -48,6 +50,8 @@ class SharedMapView extends StatefulWidget {
 class SharedMapViewState extends State<SharedMapView> {
   GoogleMapController? _controller;
   BitmapDescriptor? _arrowIcon;
+  String? _iconRoad;
+  int _iconGeneration = 0;
   String? _darkStyle;
   String? _lightStyle;
   double _savedTilt = 60;
@@ -108,28 +112,18 @@ class SharedMapViewState extends State<SharedMapView> {
   }
 
   Future<void> _loadArrow() async {
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-    final path = Path()
-      ..moveTo(40, 4)
-      ..lineTo(74, 73)
-      ..lineTo(40, 57)
-      ..lineTo(6, 73)
-      ..close();
-    canvas.drawShadow(path, const Color(0xFF127BFF), 11, true);
-    canvas.drawPath(path, Paint()..color = const Color(0xFF1375EA));
-    canvas.drawPath(path, Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4);
-    final picture = recorder.endRecording();
-    final image = await picture.toImage(80, 80);
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    image.dispose();
-    picture.dispose();
-    if (!mounted || bytes == null) return;
-    setState(() => _arrowIcon =
-        BitmapDescriptor.bytes(bytes.buffer.asUint8List()));
+    final road = GpsMarkerArt.roadLabel(widget.roadName);
+    if (_iconRoad == road && _arrowIcon != null) return;
+    _iconRoad = road;
+    final generation = ++_iconGeneration;
+    try {
+      final icon = await GpsMarkerArt.draw(road);
+      if (mounted && generation == _iconGeneration) {
+        setState(() => _arrowIcon = icon);
+      }
+    } catch (_) {
+      // Lỗi Canvas chỉ mất nhãn GPS, bản đồ và luồng GPS vẫn hoạt động.
+    }
   }
 
   CameraPosition get _camera => CameraPosition(
@@ -180,6 +174,10 @@ class SharedMapViewState extends State<SharedMapView> {
   @override
   void didUpdateWidget(covariant SharedMapView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!SharedMapView.useMock && oldWidget.roadName != widget.roadName) {
+      _arrowIcon = null;
+      _loadArrow();
+    }
     if (oldWidget.routePoints != widget.routePoints &&
         widget.routePoints != null && widget.routePoints!.length >= 2) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _fitRoute());
@@ -256,10 +254,13 @@ class SharedMapViewState extends State<SharedMapView> {
               icon: _arrowIcon ??
                   BitmapDescriptor.defaultMarkerWithHue(
                       BitmapDescriptor.hueAzure),
-              flat: true,
-              anchor: const Offset(.5, .5),
-              rotation: widget.bearing,
-              infoWindow: const InfoWindow(title: 'Vị trí GPS thiết bị'),
+              // Không quay cả bitmap: tên đường luôn đọc ngang bên dưới xe.
+              flat: false,
+              anchor: const Offset(.5, .35),
+              infoWindow: InfoWindow(
+                title: GpsMarkerArt.roadLabel(widget.roadName),
+                snippet: 'GPS thiết bị · tên đường tham khảo',
+              ),
             ),
         },
         polylines: _polylines,

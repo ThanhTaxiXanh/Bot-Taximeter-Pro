@@ -142,6 +142,7 @@ class _HomePageState extends State<HomePage> {
                       : LatLng(GpsTracker.instance.fix!.point.latitude,
                           GpsTracker.instance.fix!.point.longitude),
                   bearing: GpsTracker.instance.fix?.point.headingDegrees ?? 0,
+                  roadName: GpsTracker.instance.roadName,
                   onFollowChanged: (value) =>
                       setState(() => _follow = value),
                 ),
@@ -252,7 +253,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.sizeOf(context).height;
-    final mapHeight = (height * .32).clamp(205.0, 310.0).toDouble();
+    final mapHeight = (height * .38).clamp(235.0, 365.0).toDouble();
     return AnimatedBuilder(
       animation: GpsTracker.instance,
       builder: (context, _) => AppShell(

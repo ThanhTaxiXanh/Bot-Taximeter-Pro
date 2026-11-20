@@ -28,7 +28,7 @@ class TripMapPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ClipRRect(
     borderRadius: BorderRadius.circular(18),
-    child: SizedBox(height: 218, child: Stack(children: <Widget>[
+    child: SizedBox(height: 270, child: Stack(children: <Widget>[
       Positioned.fill(child: SharedMapView(
         key: mapKey, is3D: is3D, isDark: true,
         trafficEnabled: traffic, followVehicle: follow,
@@ -37,6 +37,7 @@ class TripMapPanel extends StatelessWidget {
             : LatLng(GpsTracker.instance.fix!.point.latitude,
                 GpsTracker.instance.fix!.point.longitude),
         bearing: GpsTracker.instance.fix?.point.headingDegrees ?? 0,
+        roadName: GpsTracker.instance.roadName,
         onFollowChanged: onFollowChanged,
       )),
       Positioned(top: 6, left: 6,
@@ -48,7 +49,7 @@ class TripMapPanel extends StatelessWidget {
             : const RoadSpeedPanel(),
       ),
       Positioned(top: 5, right: 5, child: SizedBox(
-        width: 60, height: 203,
+        width: 60, height: 255,
         child: FittedBox(
           fit: BoxFit.scaleDown, alignment: Alignment.topCenter,
           child: MapControlButtons(

@@ -44,6 +44,12 @@ Xem [**Checklist nghiệm thu Bước 23**](docs/ACCEPTANCE_STEP23.md) trước 
 
 [**Cổng bàn giao bản debug — Bước 24**](docs/DEBUG_RELEASE_GATE_STEP24.md) ghi rõ SHA/CI chuẩn, điều kiện tải APK, các rào chắn hồi quy và giới hạn nghiệm thu. **CI đạt không đồng nghĩa đã kiểm tra GPS/Maps/pin trên điện thoại thật.**
 
+## Giao diện bản đồ và nguồn dữ liệu giao thông — Bước 25
+
+Đã đối chiếu 7 ảnh giao diện của dự án; bản đồ **Home lớn hơn**, bản đồ **Đang chạy** cao hơn, nhãn tên đường gắn **ngay bên dưới mũi tên GPS**. Khi GPS chưa xác định tên, nhãn ghi `Chưa xác định tên đường`; tra tên vẫn cần máy chủ Nominatim HTTPS được phép và thao tác người dùng.
+
+Đã đọc các bộ CSV/GeoJSON biển báo, nhưng **chưa áp dụng số giới hạn tốc độ suy ra** do thiếu thông tin hướng/hiệu lực/nguồn. Xem [phân tích ảnh và dữ liệu giao thông Bước 25](docs/TRAFFIC_IMAGES_STEP25.md). Không nhập dữ liệu chưa kiểm chứng vào cảnh báo an toàn.
+
 ## Công nghệ, kiểm thử, cấu trúc
 
 - Flutter (phiên bản ghi trong CI), Riverpod, GoRouter **7 tuyến**, `geolocator`, `google_maps_flutter`, `sqflite`, `pdf`, `printing`, `shared_preferences`.
