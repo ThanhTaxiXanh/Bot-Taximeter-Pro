@@ -319,3 +319,11 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - **Tại thời điểm commit:** CI của Bước 23 chưa được xác minh; chưa chạy thử nâng cấp với dữ liệu cá nhân trên Redmi hoặc số tiền giao dịch thật. Phải đọc Issue #1 cùng SHA commit mới, kiểm tra 4/4 trước khi sử dụng bản APK mới. Nếu CI lỗi thì ưu tiên sửa lỗi và không tiến thêm bước 24.
 - **Việc cần kiểm tra trên điện thoại:** từng ô trong `docs/ACCEPTANCE_STEP23.md`, nhất là bảo toàn lịch sử, snapshot, GPS nền/đóng màn hình, bản đồ thật và số tiền/cước; không chia sẻ khóa API/OTP/vị trí riêng.
 - **Bước tiếp theo:** 24 — xử lý phát hiện từ nghiệm thu hoặc khóa sổ mã debug khi có CI 4/4 và người dùng tiếp tục.
+
+
+### Sửa lỗi CI #42 — dữ liệu thời gian chờ trong test nghiệm thu (20/11/2026)
+
+- Đọc Issue #1 và CI #42 đúng commit `5f92205`: GitHub workflow **success** nhưng `flutter test` **lỗi 1 ca** (`test/release_acceptance_test.dart:40`), các mục `flutter analyze`, build APK debug arm64 và Android 13 đều đạt.
+- Nguyên nhân: `TripController.tick()` giới hạn `delta` tối đa **30 giây mỗi lượt** để không tính thời gian ứng dụng đã đóng; test lại cộng 360 giây đồng hồ giả rồi chỉ gọi `tick()` **một lần**, khiến `waitingSeconds` thực tế chỉ 30, thay vì 360.
+- Chỉ chỉnh **một file test Dart**: mô phỏng **12 lần x 30 giây**, mỗi lần gọi `tick()`, và kiểm tra `waitingSeconds == 360` trước `resume()`. Các kỳ vọng mốc 500 đ, làm tròn 30.500 → 30.000, BOT 5.000 → tổng 35.000 và QR/biên lai vẫn giữ nguyên.
+- Cập nhật `PROGRESS.md`; **không thay** `TripController`, bộ lọc GPS, biểu phí, SQLite migration, VietQR/PDF, SOS/LED, app routes, quyền Android, signing hay workflow. **Bước 24 chưa bắt đầu**, chỉ tiếp tục sau khi CI của commit sửa lỗi đạt 4/4.

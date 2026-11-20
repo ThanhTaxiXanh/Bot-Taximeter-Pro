@@ -31,8 +31,12 @@ void main() {
       expect(trip.distanceMeters, 1500);
 
       trip.pause();
-      now = now.add(const Duration(seconds: 360));
-      trip.tick();
+      // tick() giới hạn tối đa 30 giây mỗi mẫu; 12 mẫu = 360 giây chờ.
+      for (var i = 0; i < 12; i++) {
+        now = now.add(const Duration(seconds: 30));
+        trip.tick();
+      }
+      expect(trip.waitingSeconds, 360);
       trip.resume();
       trip.addToll(5000);
       final stored = await trip.complete();
