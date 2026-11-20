@@ -102,7 +102,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Bước 25 — bản đồ to hơn và tên đường dưới marker GPS**: đã đọc trực tiếp 7 ảnh giao diện, Master Prompt, 2 CSV và 2 GeoJSON giao thông; đã xác minh **CI #44 commit `ae9f75b` đạt 4/4 trước khi sửa**. Home tăng tỷ lệ bản đồ từ 32% lên 38% màn (có clamp), TripMapPanel cao 218 → 270 px. Tạo `GpsMarkerArt` làm ảnh mũi tên kèm pill tên đường **phía dưới marker**, dùng `GpsTracker.roadName` đã xác minh; chưa có tên thì ghi `Chưa xác định tên đường`. Giữ nguyên giới hạn Nominatim và chế độ không xin mạng mặc định. Thêm test nhãn GPS, kiểm kê dữ liệu giao thông tại [docs/TRAFFIC_IMAGES_STEP25.md](docs/TRAFFIC_IMAGES_STEP25.md). **Không kích hoạt dữ liệu giới hạn tốc độ chưa xác minh**. CI mới chưa xác nhận; Bước tiếp theo dự kiến **26 — tích hợp biển báo tham khảo có kiểm chứng dữ liệu**, chỉ sau CI 4/4 và người dùng yêu cầu tiếp.
+**Bước 26 — lớp biển tốc độ tham khảo thử nghiệm tại Bắc Giang.** Đã xác nhận **CI #45 commit `6934852` đạt 4/4**. Từ CSV gốc 38.757 dòng chỉ trích 147 bản ghi trong vùng ±0,075° quanh demo Bắc Giang, giữ id/tọa độ/tốc độ suy ra/mã hướng (47 mã 255); tạo `ReferenceSpeedSigns` parser + lọc gần GPS 1,6 km, tối đa 16 ghim cam, mặc định tắt trên Home, popup `CHƯA XÁC MINH`. Không thay cước, giới hạn tốc độ chính hay cảnh báo. Xem [docs/REFERENCE_SIGNS_STEP26.md](docs/REFERENCE_SIGNS_STEP26.md). **Chờ xác minh CI commit mới**; phần nguồn/giấy phép/hướng/hiệu lực chưa có căn cứ đủ để bật cảnh báo từ dữ liệu. **Bước sau: 27 — kiểm định nguồn và nạp dữ liệu theo vùng**, chỉ khi CI đạt và người dùng yêu cầu tiếp.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -354,3 +354,15 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - **Quy tắc giới hạn:** Thay đổi đúng **5 file Dart** `shared_map_view.dart`, `gps_marker_art.dart`, `home_page.dart`, `trip_map_panel.dart`, `gps_marker_art_test.dart`, mỗi tệp ≤300 dòng. Có sửa tài liệu GPS/README và `PROGRESS.md`, không chạm `.github/`, `ci/`, debug signing, khóa Maps, Android package, SQLite, cước, QR/PDF, SOS, LED hay 7 routes.
 - **Cần thử trên Redmi:** bản đồ Home/Trip không tràn, marker và tên đường bám cùng tọa độ/giữ ngang khi quay bản đồ, GPS và Nominatim chỉ hiển thị kết quả khi có thật, fallback rõ ràng, không bịa biển báo. Thực địa chưa nghiệm thu.
 - **CI commit Bước 25 chưa được xác nhận tại thời điểm ghi.** Nếu CI báo lỗi phải sửa trước bước kế. Bước tiếp theo đề xuất **26 — parser dữ liệu biển báo tham khảo và kiểm định nguồn** theo dữ liệu người dùng, không tự làm thay đổi cảnh báo tốc độ.
+
+
+## Bước 26 — hiển thị biển tốc độ suy ra, dữ liệu tham khảo (20/11/2026)
+
+- **Điều kiện:** Đã đọc Issue #1 và jobs CI #45 `6934852` đúng SHA, 4/4 đạt: `flutter analyze`, unit/widget, APK arm64, Android 13. Đã đọc lại `MASTER PROMPT.md`, 2 CSV, 2 GeoJSON; không xem 38.757 biển là nguồn hiệu lực pháp lý.
+- **Thử nghiệm địa phương:** trích chính xác 147 dòng `speed_limit_signs.csv` với `|lat-21.2741|<=.075`, `|lon-106.1946|<=.075`; 47 hướng thô `255`. Gói gzip/base64 trong `lib/features/map_tracking/data/reference_speed_signs.dart`; bảo tồn id/tọa độ 6 thập phân/tốc độ suy ra/direction_raw; không nhúng toàn bộ dữ liệu chưa kiểm chứng.
+- **Hiển thị:** `HomePage` có `FilterChip` **Biển tham khảo**, mặc định tắt. Khi bật, marker cam đi qua `ReferenceSpeedSigns.markersNear` với GPS đã lọc (không có GPS = tâm demo Bắc Giang), bán kính 1.600 m, gộp ô gần nhau và tối đa 16 marker. `SharedMapView` nhận `Set<Marker> referenceMarkers`; popup `Suy ra ~N km/h · CHƯA XÁC MINH`. Không thêm Map ID/API Google trả phí, không cần mạng.
+- **An toàn:** nguồn thiếu bảng mã hướng/hiệu lực/ngày cập nhật/giấy phép. Giá trị này **không đi vào `SpeedLimitEngine` hoặc `SpeedAlertController`**, không thay cước, không khẳng định biển phù hợp làn/hướng/loại xe. `trafficEnabled` vẫn là traffic SDK khác biệt.
+- **Kiểm thử:** `test/reference_speed_signs_test.dart` kiểm tra parser, lọc dữ liệu sai/ID trùng, mẫu 147 dòng, 47 direction=255, pin giới hạn 16, popup cảnh báo; `test/home_page_test.dart` xác nhận nút mặc định tắt và có thể bật trên Canvas CI. Đúng **5 tệp Dart** đổi/tạo (`reference_speed_signs.dart`, `shared_map_view.dart`, `home_page.dart`, 2 test = **5 tệp Dart**), mỗi tệp ≤300 dòng.
+- Tài liệu: tạo `docs/REFERENCE_SIGNS_STEP26.md`, bổ sung `README.md`, ghi `PROGRESS.md`. Không sửa `.github/`, `ci/`, Android package, signing, GPS/Haversine, FareEngine, SQLite, VietQR/PDF, SOS, LED, 7 route.
+- **Chưa nghiệm thu:** lớp chỉ hiện gần GPS/tâm demo (không chạy theo viewport khi kéo), chưa có xác nhận người dùng về nguồn dữ liệu, quyền phân phối, tọa độ thực địa, chiều hiệu lực, tốc độ/biển có tác dụng thực. CI của commit này **chưa xác nhận** khi ghi.
+- **Bước sau:** 27 — kiểm chứng nguồn và mở rộng dữ liệu có giới hạn theo viewport/tile, chỉ sau CI xanh và yêu cầu tiếp tục.

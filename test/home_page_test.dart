@@ -22,6 +22,12 @@ void main() {
     expect(find.text('GPS tốt'), findsOneWidget);
     expect(find.text('Google Maps 3D'), findsOneWidget);
     expect(find.text('Follow xe'), findsOneWidget);
+    final referenceToggle = find.byKey(
+        const Key('toggle_reference_speed_signs'));
+    expect(tester.widget<FilterChip>(referenceToggle).selected, isFalse);
+    tester.widget<FilterChip>(referenceToggle).onSelected!(true);
+    await tester.pump();
+    expect(tester.widget<FilterChip>(referenceToggle).selected, isTrue);
     for (final label in <String>[
       'Tìm kiếm', 'Tuyến đường', 'Doanh thu', 'Cài đặt',
       'Bắt đầu', 'Lịch sử',

@@ -50,6 +50,12 @@ Xem [**Checklist nghiệm thu Bước 23**](docs/ACCEPTANCE_STEP23.md) trước 
 
 Đã đọc các bộ CSV/GeoJSON biển báo, nhưng **chưa áp dụng số giới hạn tốc độ suy ra** do thiếu thông tin hướng/hiệu lực/nguồn. Xem [phân tích ảnh và dữ liệu giao thông Bước 25](docs/TRAFFIC_IMAGES_STEP25.md). Không nhập dữ liệu chưa kiểm chứng vào cảnh báo an toàn.
 
+## Biển báo tham khảo trên bản đồ — Bước 26
+
+Home có nút **Biển tham khảo** (mặc định tắt), khi bật hiển thị tối đa **16 ghim màu cam** gần GPS từ **147 bản ghi thử nghiệm quanh Bắc Giang** của CSV người dùng cung cấp. Popup ghi **CHƯA XÁC MINH** và mã hướng thô; **không ảnh hưởng biển giới hạn chính, cảnh báo vượt tốc độ hoặc tính cước**. Phạm vi trích xuất chỉ là bản thử nghiệm, không đại diện cho toàn tỉnh/cả nước.
+
+Xem [phạm vi mẫu, nguồn và cách kiểm thử lớp biển Bước 26](docs/REFERENCE_SIGNS_STEP26.md). Trước khi mở rộng dữ liệu/thương mại phải xác minh quyền sử dụng, thời điểm và ý nghĩa hướng biển.
+
 ## Công nghệ, kiểm thử, cấu trúc
 
 - Flutter (phiên bản ghi trong CI), Riverpod, GoRouter **7 tuyến**, `geolocator`, `google_maps_flutter`, `sqflite`, `pdf`, `printing`, `shared_preferences`.

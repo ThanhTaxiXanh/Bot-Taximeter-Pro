@@ -20,7 +20,7 @@ class SharedMapView extends StatefulWidget {
     this.showRoute = false, this.routeIndex = 0,
     this.routePoints, this.onFollowChanged,
     this.vehiclePosition,
-    this.roadName,
+    this.roadName, this.referenceMarkers = const <Marker>{},
     this.bearing = 0,
     this.zoom = 17,
   });
@@ -36,6 +36,7 @@ class SharedMapView extends StatefulWidget {
   final ValueChanged<bool>? onFollowChanged;
   final LatLng? vehiclePosition;
   final String? roadName;
+  final Set<Marker> referenceMarkers;
   final double bearing;
   final double zoom;
 
@@ -238,7 +239,7 @@ class SharedMapViewState extends State<SharedMapView> {
         mapToolbarEnabled: false,
         zoomControlsEnabled: false,
         compassEnabled: true,
-        markers: <Marker>{
+        markers: <Marker>{...widget.referenceMarkers,
           if (widget.routePoints != null && widget.routePoints!.length >= 2)
             Marker(markerId: const MarkerId('route-start'),
               position: widget.routePoints!.first,

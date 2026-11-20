@@ -7,6 +7,7 @@ import '../../../shared/app_shell.dart';
 import '../../../shared/glass_widgets.dart';
 import '../../../shared/shared_map_view.dart';
 import '../data/gps_tracker.dart';
+import '../data/reference_speed_signs.dart';
 import '../../road_safety/speed_alert_widgets.dart';
 import '../../speed_limit/road_speed_panel.dart';
 import 'gps_permission_prompt.dart';
@@ -18,13 +19,11 @@ class HomePage extends StatefulWidget {
 }
 class _HomePageState extends State<HomePage> {
   final _mapKey = GlobalKey<SharedMapViewState>();
-  bool _is3D = true, _isDark = false, _traffic = false, _follow = true;
+  bool _is3D = true, _isDark = false, _traffic = false, _follow = true, _signRefs = false;
   int _limitKmh = 60;
-  void _message(String value) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(value), duration: const Duration(seconds: 2)),
-    );
-  }
+  void _message(String value) => ScaffoldMessenger.of(context)
+      .showSnackBar(SnackBar(content: Text(value),
+          duration: const Duration(seconds: 2)));
   Future<void> _chooseSpeedLimit() async {
     await showModalBottomSheet<void>(
       context: context,
@@ -80,11 +79,9 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-  Widget _menuItem(
-    BuildContext sheetContext, String label, IconData icon, String route,
-  ) => ListTile(
-        title: Text(label),
-        leading: Icon(icon),
+  Widget _menuItem(BuildContext sheetContext, String label,
+      IconData icon, String route) => ListTile(
+        title: Text(label), leading: Icon(icon),
         onTap: () {
           Navigator.of(sheetContext).pop();
           context.push(route);
@@ -143,13 +140,17 @@ class _HomePageState extends State<HomePage> {
                           GpsTracker.instance.fix!.point.longitude),
                   bearing: GpsTracker.instance.fix?.point.headingDegrees ?? 0,
                   roadName: GpsTracker.instance.roadName,
+                  referenceMarkers: _signRefs ? ReferenceSpeedSigns.markersNear(
+                    GpsTracker.instance.fix?.point.latitude ??
+                        SharedMapView.demoVehiclePosition.latitude,
+                    GpsTracker.instance.fix?.point.longitude ??
+                        SharedMapView.demoVehiclePosition.longitude)
+                      : const <Marker>{},
                   onFollowChanged: (value) =>
                       setState(() => _follow = value),
                 ),
               ),
-              Positioned(
-                top: 8, left: 8,
-                child: GpsTracker.useMock
+              Positioned(top: 8, left: 8, child: GpsTracker.useMock
                     ? HomeSpeedPanel(
                         limitKmh: _limitKmh,
                         onLimitTap: _chooseSpeedLimit,
@@ -157,8 +158,13 @@ class _HomePageState extends State<HomePage> {
                       )
                     : const RoadSpeedPanel(),
               ),
-              Positioned(
-                top: 7, right: 7,
+              Positioned(top: 82, left: 8, child: FilterChip(
+                key: const Key('toggle_reference_speed_signs'),
+                label: const Text('Biển tham khảo'),
+                selected: _signRefs,
+                onSelected: (v) => setState(() => _signRefs = v),
+              )),
+              Positioned(top: 7, right: 7,
                 child: SizedBox(
                   width: 64, height: height - 14,
                   child: FittedBox(
@@ -182,9 +188,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              Positioned(
-                bottom: 8, left: 36, right: 36,
-                child: GlassCard(
+              Positioned(bottom: 8, left: 36, right: 36, child: GlassCard(
                   onTap: () async {
                     if (GpsTracker.instance.fix == null) {
                       _message('Chưa có GPS; chạm chip GPS để bật');
@@ -222,9 +226,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              Positioned(
-                left: 10, bottom: 10,
-                child: Text(GpsTracker.useMock ? 'BẢN ĐỒ MẪU'
+              Positioned(left: 10, bottom: 10, child: Text(GpsTracker.useMock ? 'BẢN ĐỒ MẪU'
                     : 'GPS THIẾT BỊ', style: const TextStyle(
                   color: AppColors.navyInk,
                   fontSize: 8, fontWeight: FontWeight.bold,
@@ -246,10 +248,8 @@ class _HomePageState extends State<HomePage> {
         ],
       );
   Widget _quick(String label, IconData icon, String route) => Expanded(
-        child: HomeQuickAction(
-          label: label, icon: icon, onTap: () => context.push(route),
-        ),
-      );
+      child: HomeQuickAction(label: label, icon: icon,
+          onTap: () => context.push(route)));
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.sizeOf(context).height;
