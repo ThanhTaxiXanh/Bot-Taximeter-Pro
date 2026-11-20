@@ -102,7 +102,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Bước 28 — tối ưu phân bố ghim theo viewport, bổ sung integration test SQLite; đang chờ CI của commit Bước 28 và nghiệm thu trên Redmi.** Điều kiện mở: **CI #46 commit `4a5ff46` đã đạt 4/4** theo Issue #1 và logs jobs. Người dùng xác nhận dữ liệu tự thu thập và cho phép dùng trực tiếp. Thêm `file_selector` để nhập `traffic_signs.csv` (151.228) hoặc `speed_limit_signs.csv` (38.757) từ điện thoại; SQLite riêng, giữ trường gốc, viewport tối đa 32 ghim, không ảnh hưởng tính cước/cảnh báo. **Dữ liệu gốc phải được chọn một lần trên điện thoại, chưa nhúng toàn bộ CSV vào repo**; 147 mẫu vẫn có trước khi nhập. Xem [docs/IMPORT_TRAFFIC_SIGNS_STEP27.md](docs/IMPORT_TRAFFIC_SIGNS_STEP27.md). Chờ CI của commit mới và nghiệm thu nhập thật. **Bước tiếp theo: 28 — sửa lỗi CI hoặc nghiệm thu/tối ưu hiển thị theo phản hồi Redmi**, không tự bổ sung chức năng ngoài phạm vi.
+**Bước 29 — đã xác minh CI #49 (commit `428cdf3`) đạt 4/4 và Release #49 cùng SHA; đã lập cổng nghiệm thu Redmi. Chờ kết quả nhập 151.228 biển thật và kiểm tra bảo toàn lịch sử trên điện thoại.** Điều kiện mở: **CI #46 commit `4a5ff46` đã đạt 4/4** theo Issue #1 và logs jobs. Người dùng xác nhận dữ liệu tự thu thập và cho phép dùng trực tiếp. Thêm `file_selector` để nhập `traffic_signs.csv` (151.228) hoặc `speed_limit_signs.csv` (38.757) từ điện thoại; SQLite riêng, giữ trường gốc, viewport tối đa 32 ghim, không ảnh hưởng tính cước/cảnh báo. **Dữ liệu gốc phải được chọn một lần trên điện thoại, chưa nhúng toàn bộ CSV vào repo**; 147 mẫu vẫn có trước khi nhập. Xem [docs/IMPORT_TRAFFIC_SIGNS_STEP27.md](docs/IMPORT_TRAFFIC_SIGNS_STEP27.md). Chờ CI của commit mới và nghiệm thu nhập thật. **Bước tiếp theo: 28 — sửa lỗi CI hoặc nghiệm thu/tối ưu hiển thị theo phản hồi Redmi**, không tự bổ sung chức năng ngoài phạm vi.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -401,3 +401,13 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - **Kết quả CI Bước 28:** Chưa xác minh ở thời điểm tạo commit này. Không khẳng định APK `debug-latest` đã có thay đổi Bước 28 cho đến khi Issue #1 và Release trùng đúng SHA mới, 4/4 đạt.
 - **Cần thử trên điện thoại:** nhập đủ 151.228 biển thật, phân bố tối đa 32 ghim khi pan/zoom, offline sau restart, cài đè giữ lịch sử; đọc báo cáo từ Redmi trước khi xem nghiệm thu hoàn tất.
 - **Bước tiếp theo: 29 — ưu tiên sửa lỗi CI nếu có, hoặc xử lý kết quả nghiệm thu thực tế khi người dùng gõ TIẾP TỤC.**
+
+
+## Bước 29 — xác minh CI #49 và bàn giao nghiệm thu Redmi (20/11/2026)
+
+- **Đã xác minh** Issue #1 cùng log riêng hai job của CI #49, commit `428cdf3bd3080369c8479483d9e702ff8064e398`: analyzer đạt (lint info), **122/122 unit/widget**, APK debug arm64 thành công, **13/13 integration Android 13**; integration test `imported_road_signs_test.dart` thực sự chạy và đạt.
+- **Release `debug-latest` (#49)**, tag và asset trỏ đúng commit `428cdf3`. APK tên `BOT-TaxiMeterPro-debug.apk`, kích thước 113.728.076 byte; SHA-1 debug vẫn `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`. Chưa tính checksum APK khi tải trên Redmi.
+- Hai CSV đính kèm đã được kiểm tra trực tiếp bằng SHA-256 và số dòng (`traffic_signs.csv`: 151.228 bản ghi; `speed_limit_signs.csv`: 38.757 bản ghi) cùng giá trị trong bàn giao.
+- **Tài liệu mới:** `docs/RELEASE_ACCEPTANCE_STEP29.md` ghi điều kiện tải APK, checklist bảo vệ dữ liệu và mẫu báo cáo lỗi/kiểm thử trên Redmi. Bước này **không thay đổi Dart, SQLite schema, API, CI, GPS/cước/PDF/VietQR/SOS/LED hoặc keystore**; chỉ ghi tài liệu. Các file Markdown không kích hoạt workflow vì cấu hình `paths-ignore`.
+- **Cần thử trên điện thoại:** cài đè #49 không mất lịch sử, nhập đủ 151.228 biển, pan/zoom không quá 32 ghim, offline/mở lại còn dữ liệu, GPS nhãn đường và các chức năng cũ. Chưa có báo cáo thử trên Redmi, không xác nhận đã nghiệm thu.
+- **Bước tiếp theo: 30 — xử lý phản hồi nghiệm thu Redmi hoặc lỗi có bằng chứng; chờ người dùng gõ TIẾP TỤC.**
