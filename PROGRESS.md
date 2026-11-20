@@ -379,3 +379,11 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - **Thay đổi đúng 5 file Dart** (2 tệp mới data/UI, `home_page.dart`, `shared_map_view.dart`, test), cùng `pubspec.yaml`, README, tài liệu Bước 27, `PROGRESS.md`. Mỗi file Dart ≤300 dòng, không thay `.github/`, `ci/`, Android package, signing, google key, route, logic tính cước, GPS filter, VietQR/PDF, SOS, LED hoặc quyền không cần thiết.
 - **CI sau commit Bước 27 chưa xác nhận tại thời điểm ghi.** Phải đợi Issue #1 đúng SHA đánh dấu 4/4; sửa lỗi CI nếu có trước bước tiếp theo.
 - **Bước tiếp theo:** 28 — xử lý CI/kiểm thử nhập đủ CSV thực tế và hiệu năng viewport trên Redmi sau khi người dùng yêu cầu.
+
+
+### Sửa lỗi CI #47 trước bàn giao — kiểu dữ liệu luồng UTF-8 (20/11/2026)
+
+- Xác nhận `main` và báo cáo Issue #1 cùng CI #47 đúng SHA `6d6963c`: **CI không đạt 4/4**, `flutter analyze` báo lỗi `argument_type_not_assignable` ở `lib/features/map_tracking/data/imported_road_signs.dart:110`; test biên dịch và APK cũng thất bại cùng nguồn gốc. Workflow #47 thất bại, **debug-latest vẫn đang là build #46 (`4a5ff46`)**, chưa bao gồm nhập toàn bộ CSV.
+- Nguyên nhân: `XFile.openRead()` trả `Stream<Uint8List>`, trong khi `utf8.decoder` nhận `StreamTransformer<List<int>,String>`. Thêm `.cast<List<int>>()` vào stream trước `.transform(utf8.decoder)`; không đổi cách nhập batch/transaction/SQL, dữ liệu biển, viewport hoặc giới hạn 32 marker.
+- Đã đọc trực tiếp `traffic_signs.csv` và `speed_limit_signs.csv` trong nguồn ChatGPT: tiêu đề thực tế bắt đầu bằng `sign_id,longitude,latitude` (không có cột index trong file thô); parser ở Bước 27 dùng đúng schema này. Hai file 7,2 MiB và 1,4 MiB, nằm trong giới hạn kích thước 18 MiB.
+- Chỉ sửa **1 Dart** và `PROGRESS.md`; **không mở bước 28**, không đổi workflow, GPS, biểu phí, dữ liệu SQLite khách hàng, API Maps, VietQR/PDF hoặc signing. Phải xác minh đầy đủ CI mới và release cùng SHA trước khi bàn giao APK Bước 27.

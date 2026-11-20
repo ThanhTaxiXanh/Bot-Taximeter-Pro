@@ -106,7 +106,7 @@ class ImportedRoadSigns extends ChangeNotifier {
       bool? speedOnly;
       await (await _db).transaction((txn) async {
         var batch = txn.batch();
-        await for (final line in file.openRead()
+        await for (final line in file.openRead().cast<List<int>>()
             .transform(utf8.decoder).transform(const LineSplitter())) {
           if (speedOnly == null) {
             speedOnly = headerKind(line);
