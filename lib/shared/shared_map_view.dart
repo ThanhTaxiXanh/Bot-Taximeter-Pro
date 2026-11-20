@@ -18,13 +18,12 @@ class SharedMapView extends StatefulWidget {
     super.key, required this.is3D, required this.isDark,
     required this.trafficEnabled, required this.followVehicle,
     this.showRoute = false, this.routeIndex = 0,
-    this.routePoints, this.onFollowChanged,
+    this.routePoints, this.onFollowChanged, this.onViewportChanged,
     this.vehiclePosition,
     this.roadName, this.referenceMarkers = const <Marker>{},
     this.bearing = 0,
     this.zoom = 17,
   });
-
   static const LatLng demoVehiclePosition = LatLng(21.2741, 106.1946);
   final bool is3D;
   final bool isDark;
@@ -34,20 +33,18 @@ class SharedMapView extends StatefulWidget {
   final int routeIndex;
   final List<LatLng>? routePoints;
   final ValueChanged<bool>? onFollowChanged;
+  final ValueChanged<LatLngBounds>? onViewportChanged;
   final LatLng? vehiclePosition;
   final String? roadName;
   final Set<Marker> referenceMarkers;
   final double bearing;
   final double zoom;
-
   /// Widget test thông thường và CI luôn dùng Canvas thay vì native Maps.
   static bool get useMock =>
       kCI || (!kIsWeb && Platform.environment['FLUTTER_TEST'] == 'true');
-
   @override
   State<SharedMapView> createState() => SharedMapViewState();
 }
-
 class SharedMapViewState extends State<SharedMapView> {
   GoogleMapController? _controller;
   BitmapDescriptor? _arrowIcon;
@@ -57,7 +54,6 @@ class SharedMapViewState extends State<SharedMapView> {
   String? _lightStyle;
   double _savedTilt = 60;
   bool _programmaticMove = false;
-
   // Ba tuyến demo ở Bắc Giang, không phải kết quả định tuyến thực tế.
   static const List<List<LatLng>> _demoRoutes = <List<LatLng>>[
     <LatLng>[
@@ -74,7 +70,6 @@ class SharedMapViewState extends State<SharedMapView> {
       LatLng(21.2742, 106.1965), LatLng(21.2763, 106.1962),
     ],
   ];
-
   @override
   void initState() {
     super.initState();
@@ -84,7 +79,6 @@ class SharedMapViewState extends State<SharedMapView> {
       _loadTilt();
     }
   }
-
   Future<void> _loadStyles() async {
     try {
       final styles = await Future.wait<String>(<Future<String>>[
@@ -99,7 +93,6 @@ class SharedMapViewState extends State<SharedMapView> {
       // Khi không đọc được file style, SDK dùng bản đồ mặc định.
     }
   }
-
   Future<void> _loadTilt() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -111,7 +104,6 @@ class SharedMapViewState extends State<SharedMapView> {
       // Bỏ qua nếu thiết bị chưa có cấu hình.
     }
   }
-
   Future<void> _loadArrow() async {
     final road = GpsMarkerArt.roadLabel(widget.roadName);
     if (_iconRoad == road && _arrowIcon != null) return;
@@ -126,7 +118,13 @@ class SharedMapViewState extends State<SharedMapView> {
       // Lỗi Canvas chỉ mất nhãn GPS, bản đồ và luồng GPS vẫn hoạt động.
     }
   }
-
+  Future<void> _publishViewport() async {
+    if (widget.onViewportChanged == null) return;
+    try {
+      final bounds = await _controller?.getVisibleRegion();
+      if (bounds != null && mounted) widget.onViewportChanged!(bounds);
+    } catch (_) { /* Bản đồ chưa sẵn sàng hoặc đã đóng. */ }
+  }
   CameraPosition get _camera => CameraPosition(
     target: widget.routePoints?.first ??
         widget.vehiclePosition ?? SharedMapView.demoVehiclePosition,
@@ -134,7 +132,6 @@ class SharedMapViewState extends State<SharedMapView> {
     bearing: widget.bearing,
     tilt: widget.is3D ? _savedTilt : 0,
   );
-
   Future<void> _recenter() async {
     final controller = _controller;
     if (controller == null || !mounted) return;
@@ -171,7 +168,6 @@ class SharedMapViewState extends State<SharedMapView> {
     widget.onFollowChanged?.call(true);
     _recenter();
   }
-
   @override
   void didUpdateWidget(covariant SharedMapView oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -214,7 +210,6 @@ class SharedMapViewState extends State<SharedMapView> {
         ),
     };
   }
-
   @override
   Widget build(BuildContext context) {
     if (SharedMapView.useMock) {
@@ -267,6 +262,7 @@ class SharedMapViewState extends State<SharedMapView> {
         polylines: _polylines,
         onMapCreated: (controller) {
           _controller = controller;
+          WidgetsBinding.instance.addPostFrameCallback((_) => _publishViewport());
           if (widget.routePoints != null && widget.routePoints!.length >= 2) {
             WidgetsBinding.instance.addPostFrameCallback((_) => _fitRoute());
           } else if (widget.followVehicle) {
@@ -277,7 +273,10 @@ class SharedMapViewState extends State<SharedMapView> {
           if (_programmaticMove) return;
           if (widget.followVehicle) widget.onFollowChanged?.call(false);
         },
-        onCameraIdle: () => _programmaticMove = false,
+        onCameraIdle: () {
+          _programmaticMove = false;
+          _publishViewport();
+        },
       )),
       Positioned(left: 5, bottom: 4, child: IgnorePointer(
         child: Text(

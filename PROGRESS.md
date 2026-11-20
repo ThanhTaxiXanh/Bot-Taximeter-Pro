@@ -102,7 +102,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Bước 26 — lớp biển tốc độ tham khảo thử nghiệm tại Bắc Giang.** Đã xác nhận **CI #45 commit `6934852` đạt 4/4**. Từ CSV gốc 38.757 dòng chỉ trích 147 bản ghi trong vùng ±0,075° quanh demo Bắc Giang, giữ id/tọa độ/tốc độ suy ra/mã hướng (47 mã 255); tạo `ReferenceSpeedSigns` parser + lọc gần GPS 1,6 km, tối đa 16 ghim cam, mặc định tắt trên Home, popup `CHƯA XÁC MINH`. Không thay cước, giới hạn tốc độ chính hay cảnh báo. Xem [docs/REFERENCE_SIGNS_STEP26.md](docs/REFERENCE_SIGNS_STEP26.md). **Chờ xác minh CI commit mới**; phần nguồn/giấy phép/hướng/hiệu lực chưa có căn cứ đủ để bật cảnh báo từ dữ liệu. **Bước sau: 27 — kiểm định nguồn và nạp dữ liệu theo vùng**, chỉ khi CI đạt và người dùng yêu cầu tiếp.
+**Bước 27 — nhập dữ liệu biển báo toàn tập từ điện thoại, nạp theo vùng bản đồ.** Điều kiện mở: **CI #46 commit `4a5ff46` đã đạt 4/4** theo Issue #1 và logs jobs. Người dùng xác nhận dữ liệu tự thu thập và cho phép dùng trực tiếp. Thêm `file_selector` để nhập `traffic_signs.csv` (151.228) hoặc `speed_limit_signs.csv` (38.757) từ điện thoại; SQLite riêng, giữ trường gốc, viewport tối đa 32 ghim, không ảnh hưởng tính cước/cảnh báo. **Dữ liệu gốc phải được chọn một lần trên điện thoại, chưa nhúng toàn bộ CSV vào repo**; 147 mẫu vẫn có trước khi nhập. Xem [docs/IMPORT_TRAFFIC_SIGNS_STEP27.md](docs/IMPORT_TRAFFIC_SIGNS_STEP27.md). Chờ CI của commit mới và nghiệm thu nhập thật. **Bước tiếp theo: 28 — sửa lỗi CI hoặc nghiệm thu/tối ưu hiển thị theo phản hồi Redmi**, không tự bổ sung chức năng ngoài phạm vi.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -366,3 +366,16 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - Tài liệu: tạo `docs/REFERENCE_SIGNS_STEP26.md`, bổ sung `README.md`, ghi `PROGRESS.md`. Không sửa `.github/`, `ci/`, Android package, signing, GPS/Haversine, FareEngine, SQLite, VietQR/PDF, SOS, LED, 7 route.
 - **Chưa nghiệm thu:** lớp chỉ hiện gần GPS/tâm demo (không chạy theo viewport khi kéo), chưa có xác nhận người dùng về nguồn dữ liệu, quyền phân phối, tọa độ thực địa, chiều hiệu lực, tốc độ/biển có tác dụng thực. CI của commit này **chưa xác nhận** khi ghi.
 - **Bước sau:** 27 — kiểm chứng nguồn và mở rộng dữ liệu có giới hạn theo viewport/tile, chỉ sau CI xanh và yêu cầu tiếp tục.
+
+
+## Bước 27 — nhập CSV biển báo do người dùng thu thập (20/11/2026)
+
+- **Điều kiện:** Kiểm tra CI #46 đúng HEAD `4a5ff46`, Issue #1 và từng jobs: analyze, flutter test, APK arm64, Android 13 **4/4 đạt**. Người dùng xác nhận bộ dữ liệu từ chính mình và cho phép tích hợp vào bản đồ ngay.
+- **Nguồn:** Đọc lại tệp thực `traffic_signs.csv` 151.228 dòng (unique ID, không có bản ghi sai tọa độ/mã), `speed_limit_signs.csv` 38.757 dòng và Master Prompt; dữ liệu GeoJSON chỉ là bản khác định dạng, **chưa tích hợp parser GeoJSON**. Tên/cột được đối chiếu trực tiếp với file, không tự suy đoán sign_type_code ngoài loại 1.
+- **Khả năng nhập:** thêm `file_selector: 1.1.0` vào `pubspec.yaml` để chọn CSV trên Android bằng trình chọn tệp của hệ thống; `lib/features/map_tracking/data/imported_road_signs.dart` mở `imported_traffic_signs.db` SQLite riêng, đọc file UTF-8 theo stream, batch 600, transaction giữ dữ liệu cũ nếu lỗi; chặn file quá 18 MiB hoặc quá 200.000 dòng hợp lệ, kiểm tra ID/lat/lon/hướng, giữ code/value/meta thô. Tệp toàn quốc được chọn **trực tiếp trên điện thoại**; không nhúng source CSV lớn vào commit.
+- **Hiển thị theo viewport:** `lib/shared/shared_map_view.dart` phát sự kiện `onViewportChanged(LatLngBounds)` khi map tạo và camera đứng; `TrafficSignsControls` nhận bounds, truy vấn vùng nhìn bằng SQLite index (tối đa 800 ứng viên, 32 marker), gom theo ô. `HomePage` hiển thị ghim nhập nếu dữ liệu nhập có mặt; trước khi nhập giữ 147 ghim mẫu Bắc Giang của Bước 26. Bật/tắt không ảnh hưởng giao thông Google Maps hay marker GPS/tên đường.
+- **Bảo vệ:** nguồn tự thu thập được phép hiển thị nhưng dữ liệu hướng/hiệu lực chưa được đối chiếu, không đưa `value_raw` vào `SpeedLimitEngine` hay logic SOS/GPS/cước. SQLite chuyến `bot_taximeter.db` và 7 route không thay.
+- **Kiểm thử:** `test/imported_road_signs_test.dart` dùng hàng thật từ hai CSV để xác minh parse/BOM/trường nguyên gốc/lọc điểm lỗi; chưa dùng SQLite hoặc picker native trong widget CI. Trên Redmi cần kiểm tra import thực 151.228 hàng, vuốt/zoom, offline, khởi động lại và dữ liệu tồn tại.
+- **Thay đổi đúng 5 file Dart** (2 tệp mới data/UI, `home_page.dart`, `shared_map_view.dart`, test), cùng `pubspec.yaml`, README, tài liệu Bước 27, `PROGRESS.md`. Mỗi file Dart ≤300 dòng, không thay `.github/`, `ci/`, Android package, signing, google key, route, logic tính cước, GPS filter, VietQR/PDF, SOS, LED hoặc quyền không cần thiết.
+- **CI sau commit Bước 27 chưa xác nhận tại thời điểm ghi.** Phải đợi Issue #1 đúng SHA đánh dấu 4/4; sửa lỗi CI nếu có trước bước tiếp theo.
+- **Bước tiếp theo:** 28 — xử lý CI/kiểm thử nhập đủ CSV thực tế và hiệu năng viewport trên Redmi sau khi người dùng yêu cầu.

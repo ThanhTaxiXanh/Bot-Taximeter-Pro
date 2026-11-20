@@ -7,11 +7,13 @@ import '../../../shared/app_shell.dart';
 import '../../../shared/glass_widgets.dart';
 import '../../../shared/shared_map_view.dart';
 import '../data/gps_tracker.dart';
+import '../data/imported_road_signs.dart';
 import '../data/reference_speed_signs.dart';
 import '../../road_safety/speed_alert_widgets.dart';
 import '../../speed_limit/road_speed_panel.dart';
 import 'gps_permission_prompt.dart';
 import 'home_widgets.dart';
+import 'traffic_signs_controls.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
   @override
@@ -19,11 +21,12 @@ class HomePage extends StatefulWidget {
 }
 class _HomePageState extends State<HomePage> {
   final _mapKey = GlobalKey<SharedMapViewState>();
+  final _signKey = GlobalKey<TrafficSignsControlsState>();
+  Set<Marker> _uploadedMarkers = <Marker>{};
   bool _is3D = true, _isDark = false, _traffic = false, _follow = true, _signRefs = false;
   int _limitKmh = 60;
-  void _message(String value) => ScaffoldMessenger.of(context)
-      .showSnackBar(SnackBar(content: Text(value),
-          duration: const Duration(seconds: 2)));
+  void _message(String value) => ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(value), duration: const Duration(seconds: 2)));
   Future<void> _chooseSpeedLimit() async {
     await showModalBottomSheet<void>(
       context: context,
@@ -81,12 +84,9 @@ class _HomePageState extends State<HomePage> {
   }
   Widget _menuItem(BuildContext sheetContext, String label,
       IconData icon, String route) => ListTile(
-        title: Text(label), leading: Icon(icon),
-        onTap: () {
-          Navigator.of(sheetContext).pop();
-          context.push(route);
-        },
-      );
+    title: Text(label), leading: Icon(icon),
+    onTap: () { Navigator.of(sheetContext).pop(); context.push(route); },
+  );
   Widget _statusChips() => Row(
         children: <Widget>[
           Expanded(
@@ -140,12 +140,15 @@ class _HomePageState extends State<HomePage> {
                           GpsTracker.instance.fix!.point.longitude),
                   bearing: GpsTracker.instance.fix?.point.headingDegrees ?? 0,
                   roadName: GpsTracker.instance.roadName,
-                  referenceMarkers: _signRefs ? ReferenceSpeedSigns.markersNear(
+                  referenceMarkers: _signRefs && ImportedRoadSigns.instance.count > 0
+                      ? _uploadedMarkers : _signRefs ? ReferenceSpeedSigns.markersNear(
                     GpsTracker.instance.fix?.point.latitude ??
                         SharedMapView.demoVehiclePosition.latitude,
                     GpsTracker.instance.fix?.point.longitude ??
                         SharedMapView.demoVehiclePosition.longitude)
                       : const <Marker>{},
+                  onViewportChanged: (bounds) =>
+                      _signKey.currentState?.onViewportChanged(bounds),
                   onFollowChanged: (value) =>
                       setState(() => _follow = value),
                 ),
@@ -158,11 +161,11 @@ class _HomePageState extends State<HomePage> {
                       )
                     : const RoadSpeedPanel(),
               ),
-              Positioned(top: 82, left: 8, child: FilterChip(
-                key: const Key('toggle_reference_speed_signs'),
-                label: const Text('Biển tham khảo'),
-                selected: _signRefs,
+              Positioned(top: 82, left: 8, child: TrafficSignsControls(
+                key: _signKey, selected: _signRefs,
                 onSelected: (v) => setState(() => _signRefs = v),
+                onMarkersChanged: (m) =>
+                    setState(() => _uploadedMarkers = m),
               )),
               Positioned(top: 7, right: 7,
                 child: SizedBox(
@@ -236,20 +239,14 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       );
-  Widget _shortcuts() => Row(
-        children: <Widget>[
-          _quick('Tìm kiếm', Icons.search, AppRouter.search),
-          const SizedBox(width: 7),
-          _quick('Tuyến đường', Icons.route, AppRouter.route),
-          const SizedBox(width: 7),
-          _quick('Doanh thu', Icons.bar_chart, AppRouter.history),
-          const SizedBox(width: 7),
-          _quick('Cài đặt', Icons.settings, AppRouter.settings),
-        ],
-      );
+  Widget _shortcuts() => Row(children: <Widget>[
+    _quick('Tìm kiếm', Icons.search, AppRouter.search),
+    const SizedBox(width: 7), _quick('Tuyến đường', Icons.route, AppRouter.route),
+    const SizedBox(width: 7), _quick('Doanh thu', Icons.bar_chart, AppRouter.history),
+    const SizedBox(width: 7), _quick('Cài đặt', Icons.settings, AppRouter.settings),
+  ]);
   Widget _quick(String label, IconData icon, String route) => Expanded(
-      child: HomeQuickAction(label: label, icon: icon,
-          onTap: () => context.push(route)));
+      child: HomeQuickAction(label: label, icon: icon, onTap: () => context.push(route)));
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.sizeOf(context).height;

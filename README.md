@@ -56,6 +56,12 @@ Home có nút **Biển tham khảo** (mặc định tắt), khi bật hiển th�
 
 Xem [phạm vi mẫu, nguồn và cách kiểm thử lớp biển Bước 26](docs/REFERENCE_SIGNS_STEP26.md). Trước khi mở rộng dữ liệu/thương mại phải xác minh quyền sử dụng, thời điểm và ý nghĩa hướng biển.
 
+## Nhập biển báo do người dùng thu thập — Bước 27
+
+Hỗ trợ nhập **toàn bộ 151.228 dòng `traffic_signs.csv` hoặc 38.757 dòng `speed_limit_signs.csv`** từ điện thoại Android, lưu ngoại tuyến trong SQLite độc lập. Nhấn **biểu tượng nhập tệp** cạnh **Biển tham khảo** trên Home; chỉ cần nhập một lần, kéo/phóng bản đồ sẽ hiển thị tối đa **32 điểm thuộc vùng nhìn**, không tải toàn bộ lên GoogleMap. Chọn CSV tổng hợp để xem đủ các loại biển; nhập tệp mới thay thế tập cũ. Nếu chưa nhập, vẫn có 147 biển thử Bắc Giang.
+
+**Giữ nguyên mã biển/hướng/giá trị thô; không tự xác nhận hiệu lực pháp lý hoặc dùng để cảnh báo vượt tốc độ.** Xem [hướng dẫn nhập dữ liệu trên Redmi](docs/IMPORT_TRAFFIC_SIGNS_STEP27.md).
+
 ## Công nghệ, kiểm thử, cấu trúc
 
 - Flutter (phiên bản ghi trong CI), Riverpod, GoRouter **7 tuyến**, `geolocator`, `google_maps_flutter`, `sqflite`, `pdf`, `printing`, `shared_preferences`.
