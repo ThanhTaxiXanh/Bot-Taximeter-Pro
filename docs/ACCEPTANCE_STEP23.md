@@ -5,7 +5,7 @@
 ## 1. Trạng thái nghiệm thu
 
 - [x] **Mốc kiểm thử trước bước 23:** CI #41, SHA `3669dd4`, toàn bộ 4 hạng mục đạt theo GitHub Issue #1: analyze, unit/widget test, APK debug arm64, Android 13 integration.
-- [ ] **CI Bước 23:** chờ Issue #1 cho commit Bước 23, yêu cầu đúng SHA và **4/4**, không chỉ dựa vào trạng thái workflow `success`.
+- [x] **CI Bước 23:** CI #43 commit `c473bb4` đạt **4/4** theo Issue #1 (analyze, flutter test, APK, UI Android 13). CI #42 có 1 test thời gian chờ bị lỗi và đã sửa trước CI #43; cần đọc lại báo cáo nếu phát sinh commit mới.
 - [ ] **Điện thoại thật:** chưa có bằng chứng đã kiểm thử GPS, Android background, key Maps, PDF, SQLite dữ liệu người dùng và VietQR thật; không đánh dấu đạt trước khi người dùng thử.
 - [ ] **Nghiệm thu vận hành:** chỉ hoàn tất sau khi các mục thiết yếu dưới đây được tài xế kiểm tra trên thiết bị thực; đây vẫn là đồng hồ cước **tham khảo, chưa kiểm định**.
 

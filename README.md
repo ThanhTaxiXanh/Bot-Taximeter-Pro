@@ -42,6 +42,8 @@
 
 Xem [**Checklist nghiệm thu Bước 23**](docs/ACCEPTANCE_STEP23.md) trước khi dùng thực địa. CI chỉ xác minh mã/app trên máy ảo; GPS thật, hao pin, bản đồ với key Google, dữ liệu sau cài đè và VietQR cần được kiểm tra trên thiết bị Redmi. **Không gỡ ứng dụng để nâng cấp nếu muốn giữ lịch sử chuyến.**
 
+[**Cổng bàn giao bản debug — Bước 24**](docs/DEBUG_RELEASE_GATE_STEP24.md) ghi rõ SHA/CI chuẩn, điều kiện tải APK, các rào chắn hồi quy và giới hạn nghiệm thu. **CI đạt không đồng nghĩa đã kiểm tra GPS/Maps/pin trên điện thoại thật.**
+
 ## Công nghệ, kiểm thử, cấu trúc
 
 - Flutter (phiên bản ghi trong CI), Riverpod, GoRouter **7 tuyến**, `geolocator`, `google_maps_flutter`, `sqflite`, `pdf`, `printing`, `shared_preferences`.

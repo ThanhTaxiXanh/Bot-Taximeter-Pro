@@ -1,6 +1,6 @@
 # BỘT TAXIMETER PRO — PROGRESS
 
-Cập nhật: 19/11/2026 (giờ Việt Nam). Repo `ThanhTaxiXanh/Bot-Taximeter-Pro`, nhánh `main`.
+Cập nhật: 20/11/2026 (giờ Việt Nam). Repo `ThanhTaxiXanh/Bot-Taximeter-Pro`, nhánh `main`.
 
 ## Đã làm
 
@@ -102,7 +102,7 @@ Dart SDK `>=3.12.0 <4.0.0`. Flutter CI #16: **3.50.0** stable.
 
 ## Việc tiếp theo
 
-**Bước 23 — rà soát và nghiệm thu tổng thể**: bổ sung bài kiểm thử native SQLite v1/v2→v3 trên DB thử độc lập và unit test kiểm tra cước → biên lai → VietQR; cập nhật README và [checklist nghiệm thu Redmi](docs/ACCEPTANCE_STEP23.md). **Đã xác nhận CI #41 commit `3669dd4` đạt 4/4 trước khi mở bước**. Chưa xác nhận CI commit Bước 23, chưa nghiệm thu GPS/Maps/pin hoặc thanh toán trên máy thật. Bước tiếp theo đề xuất **24 — xử lý kết quả nghiệm thu**, chỉ khi người dùng yêu cầu `TIẾP TỤC` và đã xem Issue #1 mới nhất.
+**Bước 24 — cổng bàn giao bản debug và rào chắn hồi quy**: hoàn thiện hồ sơ bàn giao, cập nhật checklist CI #43, thêm test bảo vệ package/7 route/Maps không Map ID/GPS profile/làm tròn. **Trước bước 24, CI #43 commit `c473bb4` đạt 4/4 theo Issue #1 và các job GitHub Actions.** Flutter 3.50.1 stable. **CI của commit Bước 24 chưa được xác minh**; không khẳng định kết quả thiết bị Redmi. Xem [`docs/DEBUG_RELEASE_GATE_STEP24.md`](docs/DEBUG_RELEASE_GATE_STEP24.md) và [checklist nghiệm thu](docs/ACCEPTANCE_STEP23.md). **Bước tiếp theo: 25 — chỉ xử lý phản hồi/lỗi có bằng chứng**, sau lệnh `TIẾP TỤC` và xác nhận CI.
 
 ## Bước 11 — triển khai xong, CI 4/4 đạt; chờ kiểm thử kết nối thực địa
 
@@ -327,3 +327,16 @@ Bộ kiểm thử CI gần nhất có thể xác minh vẫn là **CI #30**, comm
 - Nguyên nhân: `TripController.tick()` giới hạn `delta` tối đa **30 giây mỗi lượt** để không tính thời gian ứng dụng đã đóng; test lại cộng 360 giây đồng hồ giả rồi chỉ gọi `tick()` **một lần**, khiến `waitingSeconds` thực tế chỉ 30, thay vì 360.
 - Chỉ chỉnh **một file test Dart**: mô phỏng **12 lần x 30 giây**, mỗi lần gọi `tick()`, và kiểm tra `waitingSeconds == 360` trước `resume()`. Các kỳ vọng mốc 500 đ, làm tròn 30.500 → 30.000, BOT 5.000 → tổng 35.000 và QR/biên lai vẫn giữ nguyên.
 - Cập nhật `PROGRESS.md`; **không thay** `TripController`, bộ lọc GPS, biểu phí, SQLite migration, VietQR/PDF, SOS/LED, app routes, quyền Android, signing hay workflow. **Bước 24 chưa bắt đầu**, chỉ tiếp tục sau khi CI của commit sửa lỗi đạt 4/4.
+
+
+## Bước 24 — cổng bàn giao bản debug và chống hồi quy (20/11/2026)
+
+- **Điều kiện:** Đã đọc Issue #1 và jobs của CI #43 commit `c473bb4`: **4/4 đạt**, gồm flutter analyze, flutter test, APK debug arm64 và Android 13 UI. Flutter phiên bản **3.50.1 stable**, SHA-1 debug vẫn `8E:14:0E:88:F1:F2:BD:56:82:61:CF:42:EA:07:A2:F5:30:C5:DA:B4`. Đã kiểm tra Release `debug-latest` build #43 tại thời điểm bắt đầu, target `c473bb4`.
+- Đã đọc lại tệp gốc `MASTER PROMPT.md`, mục 1B/2/3 và lộ trình 10: lộ trình gốc kết thúc ở **mục 14 (Hoàn thiện)**. Các bước 15–24 là công việc mở rộng của dự án, không được mô tả là 24 mục gốc. Không triển khai chức năng mới cho taxi khi chưa có kết quả nghiệm thu Redmi.
+- Thêm `test/release_guardrails_test.dart` (66 dòng, không dùng plugin native): kiểm tra package Android, đúng 7 `GoRoute`; `SharedMapView` dùng `GoogleMap`, JSON style/traffic SDK và không thêm `mapId`/`cloudMapId`; dependency `google_maps_flutter` ghim số phiên bản và không có một số package paid API; `GpsTracker` và Maps dùng mock trong CI, nhịp GPS chuyến **1s/0m** và Home **5s/10m**; cước tại mốc 500 đ và BOT cộng sau làm tròn. Test mã nguồn không xác nhận billing thật trên Google Cloud.
+- Tạo `docs/DEBUG_RELEASE_GATE_STEP24.md`: biên bản release debug, cách so khớp SHA của Release/CI, khác biệt **CI đạt** so với **nghiệm thu Redmi** và **phát hành thương mại**, checklist thử nhanh khi xe dừng, rủi ro khóa ký debug trong repo public. Không tạo bản release chính thức hoặc tự ký phát hành.
+- Cập nhật `docs/ACCEPTANCE_STEP23.md`: đánh dấu **CI Bước 23 đạt 4/4 từ #43**, giữ mọi checkbox kiểm thử Redmi thực tế chưa xác nhận. `README.md` liên kết hồ sơ bàn giao.
+- Thay đổi **1 tệp Dart mới** và 4 tệp Markdown (`README.md`, `docs/DEBUG_RELEASE_GATE_STEP24.md`, `docs/ACCEPTANCE_STEP23.md`, `PROGRESS.md`); không thay logic hay dependencies, GPS, cước, SQLite, QR/PDF, SOS/LED, route, signing, CI workflow.
+- **CI của commit Bước 24 chưa được xác minh tại lúc ghi tiến độ**; báo cáo Issue #1 của run mới phải được kiểm tra đủ 4/4. Nếu CI lỗi, sửa trước khi bước mới.
+- **Cần thử trên điện thoại Redmi:** cài đè bản đã kiểm tra CI; đối chiếu lịch sử và snapshot, GPS Home ra nền/tắt, GPS chuyến foreground, thử cước/số tiền PDF và QR, SOS/LED, Google Maps thật/Cloud Billing. Không dùng app như thiết bị taxi đã kiểm định; chưa xác nhận nghiệm thu thực địa.
+- **Bước tiếp theo: 25 — xử lý lỗi CI hoặc kết quả nghiệm thu thực tế có bằng chứng**, không tự bổ sung tính năng ngoài phạm vi Master Prompt.
