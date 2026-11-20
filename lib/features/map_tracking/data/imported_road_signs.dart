@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -55,7 +54,10 @@ class ImportedRoadSign {
 
 /// SQLite tách biệt, không đụng bot_taximeter.db của lịch sử chuyến.
 class ImportedRoadSigns extends ChangeNotifier {
-  ImportedRoadSigns._();
+  ImportedRoadSigns._() : _testingPath = null;
+  @visibleForTesting
+  ImportedRoadSigns.forTesting(String path) : _testingPath = path;
+  final String? _testingPath;
   static final ImportedRoadSigns instance = ImportedRoadSigns._();
   Future<Database>? _opening;
   int count = 0;
@@ -76,7 +78,8 @@ class ImportedRoadSigns extends ChangeNotifier {
 
   Future<Database> get _db => _opening ??= _open();
   Future<Database> _open() async {
-    final path = (await getDatabasesPath()) + '/imported_traffic_signs.db';
+    final path = _testingPath ??
+        '${await getDatabasesPath()}/imported_traffic_signs.db';
     return openDatabase(path, version: 1, onCreate: (db, _) async {
       await db.execute('CREATE TABLE signs (id INTEGER PRIMARY KEY, '
           'lat REAL NOT NULL, lon REAL NOT NULL, code INTEGER NOT NULL, '
@@ -84,6 +87,13 @@ class ImportedRoadSigns extends ChangeNotifier {
           'meta TEXT NOT NULL)');
       await db.execute('CREATE INDEX signs_location ON signs(lat, lon)');
     });
+  }
+
+  @visibleForTesting
+  Future<void> closeForTesting() async {
+    final opening = _opening;
+    _opening = null;
+    if (opening != null) await (await opening).close();
   }
 
   Future<void> loadCount() async {
@@ -144,7 +154,7 @@ class ImportedRoadSigns extends ChangeNotifier {
     }
   }
 
-  /// Chỉ truy vấn vùng nhìn; nhiều nhất 800 ứng viên và 32 marker.
+  /// Mỗi ô viewport chọn tối đa 1 biển, nhiều nhất 32 marker.
   Future<Set<Marker>> markersInBounds(LatLngBounds bounds) async {
     if (count == 0 || busy) return <Marker>{};
     final south = bounds.southwest.latitude;
@@ -152,32 +162,39 @@ class ImportedRoadSigns extends ChangeNotifier {
     final west = bounds.southwest.longitude;
     final east = bounds.northeast.longitude;
     if (north <= south || east <= west) return <Marker>{};
-    final midLat = (north + south) / 2, midLon = (east + west) / 2;
-    final rows = await (await _db).rawQuery(
-      'SELECT id, lat, lon, code, direction, raw_value, meta FROM signs '
-      'WHERE lat BETWEEN ? AND ? AND lon BETWEEN ? AND ? '
-      'ORDER BY (lat-?)*(lat-?) + (lon-?)*(lon-?) LIMIT 800',
-      <Object>[south, north, west, east, midLat, midLat, midLon, midLon],
-    );
-    final latStep = math.max((north - south) / 7, 0.00025);
-    final lonStep = math.max((east - west) / 5, 0.00025);
-    final cells = <String>{}, markers = <Marker>{};
-    for (final row in rows) {
-      final sign = ImportedRoadSign.fromDb(row);
-      final cell = ((sign.lat - south) / latStep).floor().toString() +
-          ':' + ((sign.lon - west) / lonStep).floor().toString();
-      if (!cells.add(cell)) continue;
-      markers.add(Marker(
-        markerId: MarkerId('collected-' + sign.id.toString()),
-        position: LatLng(sign.lat, sign.lon),
-        icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueOrange),
-        infoWindow: InfoWindow(
-          title: sign.title + ' · CHƯA XÁC NHẬN CHIỀU',
-          snippet: sign.details,
-        ),
-      ));
-      if (markers.length >= 32) break;
+    // Chia viewport thành 8 x 4 ô, tránh dồn 800 điểm ở gần tâm.
+    // Mỗi ô chỉ truy vấn 1 bản ghi bằng index: tối đa 32 ghim.
+    final db = await _db;
+    final latStep = (north - south) / 8;
+    final lonStep = (east - west) / 4;
+    final markers = <Marker>{};
+    for (var row = 0; row < 8; row++) {
+      final minLat = south + row * latStep;
+      final maxLat = row == 7 ? north : south + (row + 1) * latStep;
+      final maxLatOp = row == 7 ? '<=' : '<';
+      for (var col = 0; col < 4; col++) {
+        final minLon = west + col * lonStep;
+        final maxLon = col == 3 ? east : west + (col + 1) * lonStep;
+        final maxLonOp = col == 3 ? '<=' : '<';
+        final hits = await db.rawQuery(
+          'SELECT id, lat, lon, code, direction, raw_value, meta FROM signs '
+          'WHERE lat >= ? AND lat $maxLatOp ? '
+          'AND lon >= ? AND lon $maxLonOp ? LIMIT 1',
+          <Object>[minLat, maxLat, minLon, maxLon],
+        );
+        if (hits.isEmpty) continue;
+        final sign = ImportedRoadSign.fromDb(hits.first);
+        markers.add(Marker(
+          markerId: MarkerId('collected-${sign.id}'),
+          position: LatLng(sign.lat, sign.lon),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueOrange),
+          infoWindow: InfoWindow(
+            title: sign.title + ' · CHƯA XÁC NHẬN CHIỀU',
+            snippet: sign.details,
+          ),
+        ));
+      }
     }
     return markers;
   }
